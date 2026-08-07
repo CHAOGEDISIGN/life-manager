@@ -1,0 +1,2961 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>人生管理系统</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+</script>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --card-bg: #ffffff;
+  --text: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #aeaeb2;
+  --sidebar-bg: #f0f0f3;
+  --sidebar-text: #1d1d1f;
+  --border: rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --brand-purple: #af52de;
+  --brand-cyan: #5ac8fa;
+  --brand-indigo: #5856d6;
+  --blue: #0e71e3;
+  --green: #34c759;
+  --orange: #ff9500;
+  --pink: #ff375f;
+  --priority-high: #ff375f;
+  --priority-mid: #ff9500;
+  --priority-low: #34c759;
+  --input-bg: #f5f5f7;
+  --hover: rgba(0,0,0,0.04);
+  --active: rgba(175,82,222,0.1);
+  --chart-grid: rgba(0,0,0,0.06);
+}
+[data-theme="dark"] {
+  --bg: #1c1c1e;
+  --card-bg: #2c2c2e;
+  --text: #f5f5f7;
+  --text-secondary: #aeaeb2;
+  --text-tertiary: #636366;
+  --sidebar-bg: #1c1c1e;
+  --sidebar-text: #f5f5f7;
+  --border: rgba(255,255,255,0.08);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow: 0 2px 12px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.35);
+  --input-bg: #3a3a3c;
+  --hover: rgba(255,255,255,0.06);
+  --active: rgba(175,82,222,0.2);
+  --chart-grid: rgba(255,255,255,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  display:flex;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--text-tertiary);border-radius:10px}
+
+/* Sidebar */
+.sidebar{
+  width:220px;min-width:220px;height:100vh;position:fixed;left:0;top:0;
+  background:var(--sidebar-bg);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:20px 12px;z-index:100;
+  transition:transform .3s ease,background .3s;overflow-y:auto;
+}
+.sidebar-logo{
+  font-size:18px;font-weight:700;padding:8px 12px 20px;
+  background:linear-gradient(135deg,var(--brand-purple),var(--brand-indigo));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;letter-spacing:-0.3px;
+}
+.sidebar-nav{flex:1;display:flex;flex-direction:column;gap:2px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:var(--radius-sm);cursor:pointer;font-size:14px;
+  color:var(--sidebar-text);transition:all .15s;border:none;background:none;
+  width:100%;text-align:left;font-family:inherit;font-weight:500;
+}
+.nav-item:hover{background:var(--hover)}
+.nav-item.active{background:var(--active);color:var(--brand-purple);font-weight:600}
+.nav-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.sidebar-actions{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.sidebar-btn{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;
+  border-radius:var(--radius-sm);cursor:pointer;font-size:13px;
+  border:1px solid var(--border);background:var(--card-bg);
+  color:var(--text);font-family:inherit;transition:all .15s;
+}
+.sidebar-btn:hover{background:var(--hover)}
+.sidebar-btn.accent{
+  background:linear-gradient(135deg,var(--brand-purple),var(--brand-indigo));
+  color:#fff;border:none;font-weight:600;justify-content:center;
+}
+.theme-toggle{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-top:8px;
+  font-size:13px;color:var(--text-secondary);cursor:pointer;border:none;
+  background:none;font-family:inherit;border-radius:var(--radius-sm);
+}
+.theme-toggle:hover{background:var(--hover)}
+
+/* Main */
+.main{
+  margin-left:220px;flex:1;padding:24px 28px;max-width:calc(100vw - 220px);
+  overflow-y:auto;min-height:100vh;
+}
+.module{display:none}
+.module.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.module-header{
+  font-size:26px;font-weight:700;margin-bottom:20px;letter-spacing:-0.4px;
+}
+.module-subtitle{font-size:14px;color:var(--text-secondary);font-weight:400;margin-top:2px}
+
+/* Cards */
+.card{
+  background:var(--card-bg);border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow);margin-bottom:16px;transition:all .3s;
+}
+.card-sm{border-radius:var(--radius-sm);padding:14px 16px}
+.card-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title{font-size:13px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{
+  background:var(--card-bg);border-radius:var(--radius-sm);padding:14px 16px;
+  box-shadow:var(--shadow-sm);text-align:center;
+}
+.stat-value{font-size:28px;font-weight:700;letter-spacing:-0.5px}
+.stat-label{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.stat-card.purple .stat-value{color:var(--brand-purple)}
+.stat-card.cyan .stat-value{color:var(--brand-cyan)}
+.stat-card.green .stat-value{color:var(--green)}
+.stat-card.orange .stat-value{color:var(--orange)}
+
+/* Inputs */
+input,select,textarea{
+  font-family:inherit;font-size:14px;border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 14px;background:var(--input-bg);
+  color:var(--text);outline:none;transition:all .15s;width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--brand-purple);box-shadow:0 0 0 3px rgba(175,82,222,0.1)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:var(--radius-sm);font-size:14px;
+  font-weight:500;cursor:pointer;border:none;font-family:inherit;
+  transition:all .15s;white-space:nowrap;
+}
+.btn-primary{background:var(--brand-purple);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-secondary{background:var(--input-bg);color:var(--text)}
+.btn-secondary:hover{background:var(--hover)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:6px}
+.btn-danger{background:var(--pink);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{background:var(--hover)}
+
+/* Tags & Badges */
+.tag{
+  display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;
+}
+.tag-high{background:rgba(255,55,95,.12);color:var(--priority-high)}
+.tag-mid{background:rgba(255,149,0,.12);color:var(--priority-mid)}
+.tag-low{background:rgba(52,199,89,.12);color:var(--priority-low)}
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;padding:0 6px;border-radius:11px;
+  font-size:11px;font-weight:600;background:var(--brand-purple);color:#fff;
+}
+
+/* Todo */
+.todo-input-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.todo-input-row input{flex:1;min-width:140px}
+.todo-input-row select{width:90px}
+.todo-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.todo-item{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--input-bg);border-radius:var(--radius-sm);
+  transition:all .2s;
+}
+.todo-item:hover{background:var(--hover)}
+.todo-item.done{opacity:.55}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--text-tertiary)}
+.todo-check{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--text-tertiary);
+  cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;font-size:12px;color:transparent;
+}
+.todo-item.done .todo-check{background:var(--green);border-color:var(--green);color:#fff}
+.todo-text{flex:1;font-size:14px}
+.todo-del{color:var(--text-tertiary);cursor:pointer;padding:4px;border-radius:4px;font-size:16px;border:none;background:none}
+.todo-del:hover{color:var(--pink)}
+.completion-bar{
+  height:8px;background:var(--input-bg);border-radius:4px;margin-top:14px;overflow:hidden;
+}
+.completion-fill{height:100%;background:var(--green);border-radius:4px;transition:width .4s ease}
+.completion-text{font-size:13px;color:var(--text-secondary);margin-top:4px}
+
+/* Diet */
+.meal-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.meal-tab{
+  padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;
+  border:1px solid var(--border);background:var(--card-bg);color:var(--text);
+  font-family:inherit;transition:all .15s;
+}
+.meal-tab.active{background:var(--brand-purple);color:#fff;border-color:var(--brand-purple)}
+.ring-progress{position:relative;width:120px;height:120px;margin:0 auto}
+.ring-progress svg{transform:rotate(-90deg)}
+.ring-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;
+}
+.ring-val{font-size:22px;font-weight:700}
+.ring-label{font-size:11px;color:var(--text-secondary)}
+.quick-foods{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.quick-food{
+  padding:5px 10px;border-radius:14px;font-size:12px;cursor:pointer;
+  border:1px solid var(--border);background:var(--card-bg);color:var(--text);
+  font-family:inherit;transition:all .15s;
+}
+.quick-food:hover{background:var(--active);border-color:var(--brand-purple)}
+
+/* Exercise */
+.exercise-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:14px}
+.exercise-btn{
+  padding:10px 6px;border-radius:var(--radius-sm);text-align:center;cursor:pointer;
+  border:1px solid var(--border);background:var(--card-bg);font-size:13px;
+  font-family:inherit;transition:all .15s;
+}
+.exercise-btn:hover{background:var(--hover)}
+.exercise-btn.active{background:var(--brand-purple);color:#fff;border-color:var(--brand-purple)}
+.exercise-btn .ex-icon{font-size:22px;display:block;margin-bottom:2px}
+.streak-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:6px 14px;
+  background:linear-gradient(135deg,var(--orange),#ff6b35);color:#fff;
+  border-radius:20px;font-size:14px;font-weight:600;
+}
+.heatmap{display:flex;gap:6px;justify-content:center}
+.heatmap-col{display:flex;flex-direction:column;gap:6px;align-items:center}
+.heatmap-cell{
+  width:34px;height:34px;border-radius:8px;background:var(--input-bg);
+  transition:all .2s;
+}
+.heatmap-cell.done{background:var(--green)}
+.heatmap-label{font-size:11px;color:var(--text-secondary);margin-top:2px}
+
+/* Finance */
+.finance-type{display:flex;gap:6px;margin-bottom:14px}
+.finance-type-btn{
+  padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;
+  border:1px solid var(--border);background:var(--card-bg);color:var(--text);
+  font-family:inherit;font-weight:500;transition:all .15s;
+}
+.finance-type-btn.active.expense{background:var(--pink);color:#fff;border-color:var(--pink)}
+.finance-type-btn.active.income{background:var(--green);color:#fff;border-color:var(--green)}
+.category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px;margin-bottom:14px}
+.cat-btn{
+  padding:8px 4px;border-radius:8px;text-align:center;cursor:pointer;font-size:12px;
+  border:1px solid var(--border);background:var(--card-bg);color:var(--text);
+  font-family:inherit;transition:all .15s;
+}
+.cat-btn.active{border-color:var(--brand-purple);background:var(--active);color:var(--brand-purple)}
+.finance-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.fin-summary-item{text-align:center;padding:10px}
+.fin-summary-item .fin-val{font-size:20px;font-weight:700}
+.fin-summary-item .fin-label{font-size:11px;color:var(--text-secondary)}
+.fin-summary-item.expense .fin-val{color:var(--pink)}
+.fin-summary-item.income .fin-val{color:var(--green)}
+.fin-summary-item.balance .fin-val{color:var(--blue)}
+
+/* Reading */
+.book-card{display:flex;gap:14px;padding:14px;background:var(--input-bg);border-radius:var(--radius-sm);margin-bottom:10px;align-items:center}
+.book-info{flex:1;min-width:0}
+.book-title{font-weight:600;font-size:15px}
+.book-author{font-size:12px;color:var(--text-secondary)}
+.progress-bar{height:8px;background:var(--card-bg);border-radius:4px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width .3s}
+.progress-fill.purple{background:var(--brand-purple)}
+.progress-fill.cyan{background:var(--brand-cyan)}
+.progress-fill.indigo{background:var(--brand-indigo)}
+.progress-text{font-size:11px;color:var(--text-secondary);margin-top:4px}
+.note-textarea{min-height:100px;resize:vertical;margin-top:8px}
+
+/* Mood */
+.mood-grid{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.mood-btn{
+  font-size:36px;padding:12px;border-radius:var(--radius);cursor:pointer;
+  border:2px solid transparent;background:var(--card-bg);transition:all .15s;
+  line-height:1;
+}
+.mood-btn:hover{transform:scale(1.1)}
+.mood-btn.active{border-color:var(--brand-purple);background:var(--active);transform:scale(1.15)}
+
+/* English */
+.flashcard{
+  width:100%;max-width:320px;height:200px;margin:0 auto 16px;
+  perspective:800px;cursor:pointer;
+}
+.flashcard-inner{
+  width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;transition:transform .5s;
+}
+.flashcard.flipped .flashcard-inner{transform:rotateY(180deg)}
+.flashcard-front,.flashcard-back{
+  position:absolute;width:100%;height:100%;backface-visibility:hidden;
+  border-radius:var(--radius);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:20px;
+  box-shadow:var(--shadow);
+}
+.flashcard-front{background:var(--card-bg);font-size:32px;font-weight:700}
+.flashcard-back{background:var(--brand-purple);color:#fff;transform:rotateY(180deg);font-size:16px}
+.flashcard-hint{font-size:12px;color:var(--text-secondary);margin-top:6px}
+
+/* Collapsible reference panels */
+.ref-panel{margin-top:10px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.ref-panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;
+  background:var(--input-bg);transition:background .15s;user-select:none;
+}
+.ref-panel-header:hover{background:var(--hover)}
+.ref-panel-arrow{font-size:12px;transition:transform .2s;color:var(--text-secondary)}
+.ref-panel.open .ref-panel-arrow{transform:rotate(180deg)}
+.ref-panel-body{display:none;padding:0 14px 10px}
+.ref-panel.open .ref-panel-body{display:block}
+.ref-item{
+  padding:8px 10px;margin-top:6px;border-radius:8px;
+  background:var(--input-bg);cursor:pointer;font-size:12px;
+  transition:all .15s;border:1px solid transparent;
+}
+.ref-item:hover{background:var(--hover)}
+.ref-item.open{border-color:var(--brand-purple);background:var(--active)}
+.ref-item-label{font-weight:600;font-size:12px}
+.ref-item-content{display:none;margin-top:6px;white-space:pre-line;font-size:12px;color:var(--text-secondary);line-height:1.6;background:var(--card-bg);padding:10px 12px;border-radius:6px}
+.ref-item.open .ref-item-content{display:block}
+
+/* Theme editor */
+.color-row{display:flex;align-items:center;gap:10px;padding:8px 0;flex-wrap:wrap}
+.color-swatch{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);flex-shrink:0}
+.color-label{flex:1;min-width:100px;font-size:13px;font-weight:500}
+.color-input{width:80px;padding:6px 8px;text-align:center}
+
+/* AI Float */
+.ai-float{
+  position:fixed;bottom:24px;right:24px;z-index:200;
+}
+.ai-btn{
+  width:56px;height:56px;border-radius:50%;font-size:28px;
+  background:linear-gradient(135deg,var(--brand-purple),var(--brand-indigo));
+  color:#fff;border:none;cursor:pointer;box-shadow:var(--shadow-lg);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;
+}
+.ai-btn:hover{transform:scale(1.08)}
+.ai-popup{
+  position:fixed;bottom:92px;right:24px;width:340px;max-width:calc(100vw - 48px);
+  background:var(--card-bg);border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);padding:18px;z-index:200;
+  display:none;flex-direction:column;gap:10px;
+}
+.ai-popup.open{display:flex;animation:fadeIn .25s ease}
+.ai-popup-title{font-size:14px;font-weight:600}
+.ai-popup input{width:100%}
+.ai-result{font-size:12px;color:var(--text-secondary);padding:6px 10px;background:var(--input-bg);border-radius:8px;display:none}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--card-bg);border-radius:var(--radius);padding:28px;
+  max-width:640px;width:calc(100vw - 40px);max-height:80vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+}
+.modal-title{font-size:20px;font-weight:700;margin-bottom:16px}
+.modal-section{margin-bottom:14px}
+.modal-section h4{font-size:14px;font-weight:600;margin-bottom:6px;color:var(--brand-purple)}
+.modal-section p{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.insight-item{display:flex;gap:8px;padding:8px 0;font-size:13px;align-items:flex-start}
+.insight-icon{font-size:18px;flex-shrink:0}
+.modal-close{
+  position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;
+  border:none;background:var(--input-bg);cursor:pointer;font-size:18px;
+  display:flex;align-items:center;justify-content:center;color:var(--text);
+}
+
+/* Toast */
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:400;
+  padding:10px 20px;border-radius:20px;background:var(--card-bg);
+  box-shadow:var(--shadow-lg);font-size:13px;font-weight:500;
+  display:none;animation:fadeIn .3s ease;
+}
+.toast.show{display:block}
+
+/* Chart containers */
+.chart-wrap{position:relative;width:100%;max-height:260px}
+.chart-wrap canvas{width:100%!important}
+
+/* Hamburger */
+.hamburger{
+  display:none;position:fixed;top:16px;left:16px;z-index:150;
+  width:36px;height:36px;border-radius:50%;background:var(--card-bg);
+  box-shadow:var(--shadow);border:none;cursor:pointer;font-size:18px;
+  align-items:center;justify-content:center;color:var(--text);
+}
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:99;
+}
+
+/* Two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* Photography */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.photo-card{
+  background:var(--card-bg);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);transition:all .25s;cursor:pointer;position:relative;
+}
+.photo-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.photo-card-img{width:100%;height:200px;object-fit:cover;display:block;background:var(--input-bg)}
+.photo-card-body{padding:12px 14px}
+.photo-card-title{font-weight:600;font-size:13px;margin-bottom:2px}
+.photo-card-meta{font-size:11px;color:var(--text-secondary);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.photo-rating{color:var(--orange);font-size:12px;letter-spacing:1px}
+.photo-comp-tag{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--active);color:var(--brand-purple)}
+.lightbox-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;
+  display:none;align-items:center;justify-content:center;flex-direction:column;
+  backdrop-filter:blur(10px);
+}
+.lightbox-overlay.open{display:flex}
+.lightbox-img{max-width:90vw;max-height:70vh;border-radius:12px;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.lightbox-info{
+  margin-top:16px;color:#fff;text-align:center;max-width:500px;
+  font-size:13px;line-height:1.6;
+}
+.lightbox-close{
+  position:fixed;top:20px;right:20px;z-index:501;
+  width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);
+  color:#fff;border:none;cursor:pointer;font-size:20px;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;
+}
+.lightbox-close:hover{background:rgba(255,255,255,.25)}
+.lightbox-nav{
+  position:fixed;top:50%;transform:translateY(-50%);z-index:501;
+  width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.1);
+  color:#fff;border:none;cursor:pointer;font-size:22px;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;
+}
+.lightbox-nav:hover{background:rgba(255,255,255,.2)}
+.lightbox-nav.prev{left:20px}
+.lightbox-nav.next{right:20px}
+.composition-grid{display:flex;flex-wrap:wrap;gap:6px}
+.comp-select{
+  padding:5px 10px;border-radius:14px;font-size:11px;cursor:pointer;
+  border:1px solid var(--border);background:var(--card-bg);color:var(--text);
+  font-family:inherit;transition:all .15s;
+}
+.comp-select.active{background:var(--brand-purple);color:#fff;border-color:var(--brand-purple)}
+.star-rating{display:flex;gap:2px;font-size:24px;cursor:pointer}
+.star-rating .star{color:var(--text-tertiary);transition:color .1s}
+.star-rating .star.active{color:var(--orange)}
+.exif-row{display:flex;gap:8px;flex-wrap:wrap}
+.exif-row input{width:90px;font-size:12px;padding:7px 10px}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;max-width:100vw;padding:16px}
+  .hamburger{display:flex}
+  .sidebar-overlay.open{display:block}
+  .module-header{font-size:20px}
+  .two-col{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .finance-summary{grid-template-columns:repeat(3,1fr)}
+  .category-grid{grid-template-columns:repeat(4,1fr)}
+  .ai-popup{width:calc(100vw - 32px);right:16px;bottom:80px}
+  .ai-float{bottom:16px;right:16px}
+  .exercise-grid{grid-template-columns:repeat(5,1fr)}
+}
+@media(min-width:769px){
+  .sidebar{transform:translateX(0)!important}
+  .sidebar-overlay{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Hamburger -->
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">🎯 人生管理系统</div>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
+  <div class="sidebar-actions">
+    <button class="sidebar-btn accent" onclick="openWeeklyAnalysis()">📊 周度数据分析</button>
+    <button class="sidebar-btn" onclick="exportData()">📤 导出数据 JSON</button>
+    <button class="sidebar-btn" onclick="document.getElementById('importFile').click()">📥 导入数据 JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+    <span>🌙</span> <span id="themeLabel">暗色模式</span>
+  </button>
+</aside>
+
+<!-- Main Content -->
+<main class="main" id="mainContent"></main>
+
+<!-- AI Float -->
+<div class="ai-float">
+  <button class="ai-btn" onclick="toggleAIPopup()" title="AI 智能输入">🤖</button>
+  <div class="ai-popup" id="aiPopup">
+    <div class="ai-popup-title">🤖 AI 智能输入</div>
+    <input type="text" id="aiInput" placeholder="描述你做了什么，如"花了10块"、"跳绳30分钟"、"心情不错"...">
+    <div class="ai-result" id="aiResult"></div>
+  </div>
+</div>
+
+<!-- Weekly Analysis Modal -->
+<div class="modal-overlay" id="weeklyModalOverlay" onclick="closeWeeklyAnalysis(event)">
+  <div class="modal" id="weeklyModal" onclick="event.stopPropagation()" style="position:relative">
+    <button class="modal-close" onclick="closeWeeklyAnalysis()">✕</button>
+    <div class="modal-title">📊 周度数据分析</div>
+    <div id="weeklyContent"></div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA MANAGER ====================
+const STORAGE_KEY = 'lifeManagerData';
+const DEFAULT_DATA = {
+  todos: [],
+  dietRecords: [], dietGoal: 2000,
+  exercises: [],
+  finances: [],
+  books: [],
+  moods: [],
+  englishWords: [], englishGoal: 20, englishLearnedToday: 0, englishDate: '',
+  accountingProgress: {practice:[],finance_mgmt:[],law:[]},
+  accountingNotes: {practice:'',finance_mgmt:'',law:''},
+  workMemos: [],
+  photos: [],
+  theme: 'light'
+};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      return {...DEFAULT_DATA, ...data};
+    }
+  } catch(e) { console.error('Load error:', e); }
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let app = loadData();
+
+function persist() { saveData(app); }
+
+// ==================== HELPERS ====================
+function today() { return new Date().toISOString().split('T')[0]; }
+function weekStart() {
+  const d = new Date();
+  d.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1));
+  return d.toISOString().split('T')[0];
+}
+function monthStart() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+}
+function formatCal(n) { return Math.round(n).toLocaleString(); }
+function formatMoney(n) { return '¥' + Number(n).toFixed(2); }
+function getWeekDays() {
+  const start = new Date(weekStart() + 'T00:00:00');
+  return Array.from({length:7},(_,i)=>{
+    const d = new Date(start);d.setDate(d.getDate()+i);
+    return d.toISOString().split('T')[0];
+  });
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ==================== CHART MANAGER ====================
+const charts = {};
+function destroyChart(key) {
+  if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+}
+function getChartColors() {
+  const s = getComputedStyle(document.documentElement);
+  return {
+    text: s.getPropertyValue('--text-secondary').trim(),
+    grid: s.getPropertyValue('--chart-grid').trim(),
+    purple: s.getPropertyValue('--brand-purple').trim(),
+    cyan: s.getPropertyValue('--brand-cyan').trim(),
+    indigo: s.getPropertyValue('--brand-indigo').trim(),
+    blue: s.getPropertyValue('--blue').trim(),
+    green: s.getPropertyValue('--green').trim(),
+    orange: s.getPropertyValue('--orange').trim(),
+    pink: s.getPropertyValue('--pink').trim(),
+  };
+}
+
+// ==================== NAVIGATION ====================
+const modules = [
+  {id:'plan',icon:'📋',label:'每日计划'},
+  {id:'diet',icon:'🥗',label:'饮食记录'},
+  {id:'exercise',icon:'🏃',label:'运动打卡'},
+  {id:'finance',icon:'💰',label:'记账存钱'},
+  {id:'reading',icon:'📚',label:'读书收获'},
+  {id:'mood',icon:'💭',label:'心情记录'},
+  {id:'english',icon:'📝',label:'英语学习'},
+  {id:'accounting',icon:'📖',label:'中级会计'},
+  {id:'workmemo',icon:'🗒️',label:'工作备忘'},
+  {id:'photo',icon:'📷',label:'摄影日志'},
+  {id:'theme',icon:'🎨',label:'主题配色'},
+];
+let currentModule = 'plan';
+
+function buildSidebar() {
+  const nav = document.getElementById('sidebarNav');
+  nav.innerHTML = modules.map(m=>`
+    <button class="nav-item" data-module="${m.id}" onclick="switchModule('${m.id}')">
+      <span class="nav-icon">${m.icon}</span> ${m.label}
+    </button>
+  `).join('');
+}
+
+function buildMainContent() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = modules.map(m=>`<div class="module" id="mod-${m.id}"></div>`).join('');
+}
+
+function switchModule(id) {
+  currentModule = id;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active', el.dataset.module===id));
+  document.querySelectorAll('.module').forEach(el=>el.classList.toggle('active', el.id==='mod-'+id));
+  Object.keys(charts).forEach(k=>destroyChart(k));
+  renderModule(id);
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ==================== MODULE RENDERERS ====================
+
+// --- 1. Daily Plan ---
+function renderPlan() {
+  const el = document.getElementById('mod-plan');
+  const todayTodos = app.todos.filter(t=>t.date===today());
+  const done = todayTodos.filter(t=>t.done).length;
+  const total = todayTodos.length;
+  const rate = total > 0 ? Math.round(done/total*100) : 0;
+
+  el.innerHTML = `
+    <div class="module-header">📋 每日计划</div>
+    <div class="card">
+      <div class="todo-input-row">
+        <input type="text" id="todoInput" placeholder="添加新任务..." onkeydown="if(event.key==='Enter')addTodo()">
+        <select id="todoPriority">
+          <option value="high">🔴 高</option>
+          <option value="mid" selected>🟡 中</option>
+          <option value="low">🟢 低</option>
+        </select>
+        <button class="btn btn-primary" onclick="addTodo()">添加</button>
+      </div>
+      <ul class="todo-list" id="todoList">${renderTodoList(todayTodos)}</ul>
+      <div class="completion-bar"><div class="completion-fill" style="width:${rate}%"></div></div>
+      <div class="completion-text">今日完成率：${rate}%（${done}/${total}）</div>
+    </div>
+  `;
+}
+
+function renderTodoList(todos) {
+  return todos.map(t=>`
+    <li class="todo-item ${t.done?'done':''}">
+      <div class="todo-check" onclick="toggleTodo(${t.id})">✓</div>
+      <span class="todo-text">${escHtml(t.text)}</span>
+      <span class="tag tag-${t.priority}">${{high:'高',mid:'中',low:'低'}[t.priority]}</span>
+      <button class="todo-del" onclick="deleteTodo(${t.id})">🗑</button>
+    </li>
+  `).join('');
+}
+
+function escHtml(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+let todoIdCounter = Date.now();
+function addTodo() {
+  const input = document.getElementById('todoInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const priority = document.getElementById('todoPriority').value;
+  app.todos.push({id:todoIdCounter++, text, priority, date:today(), done:false});
+  persist(); renderPlan(); toast('✅ 任务已添加');
+  input.value = ''; input.focus();
+}
+
+function toggleTodo(id) {
+  const todo = app.todos.find(t=>t.id===id);
+  if (todo) { todo.done = !todo.done; persist(); renderPlan(); }
+}
+
+function deleteTodo(id) {
+  app.todos = app.todos.filter(t=>t.id!==id);
+  persist(); renderPlan();
+}
+
+// --- 2. Diet ---
+const MEALS = ['🥐 早餐','🍱 午餐','🥘 晚餐','🍎 加餐'];
+const QUICK_FOODS = [
+  {name:'米饭(碗)',cal:200},{name:'面条(碗)',cal:300},{name:'鸡蛋(个)',cal:70},
+  {name:'苹果(个)',cal:95},{name:'香蕉(根)',cal:105},{name:'牛奶(杯)',cal:150},
+  {name:'面包(片)',cal:80},{name:'鸡肉(100g)',cal:167},{name:'牛肉(100g)',cal:250},
+  {name:'三文鱼(100g)',cal:208},{name:'西兰花(份)',cal:50},{name:'咖啡(杯)',cal:5},
+];
+
+function renderDiet() {
+  const el = document.getElementById('mod-diet');
+  const todayRecords = app.dietRecords.filter(r=>r.date===today());
+  const totalCal = todayRecords.reduce((s,r)=>s+r.cal,0);
+  const goal = app.dietGoal;
+  const remain = Math.max(0, goal - totalCal);
+  const pct = Math.min(100, Math.round(totalCal/goal*100));
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (pct/100) * circumference;
+  const cs = getComputedStyle(document.documentElement);
+  const inputBgColor = cs.getPropertyValue('--input-bg').trim();
+  const pinkColor = cs.getPropertyValue('--pink').trim();
+  const greenColor = cs.getPropertyValue('--green').trim();
+  const ringColor = totalCal > goal ? pinkColor : greenColor;
+
+  // Weekly chart data
+  const weekDays = getWeekDays();
+  const weekCal = weekDays.map(d=>app.dietRecords.filter(r=>r.date===d).reduce((s,r)=>s+r.cal,0));
+
+  el.innerHTML = `
+    <div class="module-header">🥗 饮食记录</div>
+    <div class="stats-row">
+      <div class="stat-card orange"><div class="stat-value">${formatCal(totalCal)}</div><div class="stat-label">今日摄入 (kcal)</div></div>
+      <div class="stat-card purple"><div class="stat-value">${formatCal(goal)}</div><div class="stat-label">每日目标 (kcal)</div></div>
+      <div class="stat-card ${remain>0?'green':'pink'}"><div class="stat-value">${formatCal(remain)}</div><div class="stat-label">${remain>0?'剩余额度':'超出额度'} (kcal)</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card" style="text-align:center">
+        <div class="card-title">📊 今日进度</div>
+        <div class="ring-progress">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="${inputBgColor}" stroke-width="8"/>
+            <circle cx="60" cy="60" r="54" fill="none" stroke="${ringColor}" stroke-width="8"
+              stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-val">${pct}%</div>
+            <div class="ring-label">日摄入进度</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 周摄入统计</div>
+        <div class="chart-wrap"><canvas id="dietWeekChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">✏️ 记录饮食</div>
+      <div class="meal-tabs" id="mealTabs">${MEALS.map((m,i)=>`<button class="meal-tab ${i===0?'active':''}" data-meal="${i}" onclick="selectMeal(${i})">${m}</button>`).join('')}</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="text" id="foodName" placeholder="食物名称" style="flex:1;min-width:120px">
+        <input type="number" id="foodCal" placeholder="卡路里" style="width:100px" min="0" onkeydown="if(event.key==='Enter')addDiet()">
+        <button class="btn btn-primary" onclick="addDiet()">记录</button>
+      </div>
+      <div class="section-title">⚡ 高频食物快捷录入</div>
+      <div class="quick-foods">${QUICK_FOODS.map(f=>`<button class="quick-food" onclick="quickDiet('${f.name}',${f.cal})">${f.name} ${f.cal}kcal</button>`).join('')}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 今日记录</div>
+      <div id="dietTodayList">${renderDietList(todayRecords)}</div>
+    </div>
+  `;
+  // Render chart after DOM update
+  setTimeout(()=>renderDietWeekChart(weekDays, weekCal), 100);
+}
+
+let selectedMeal = 0;
+function selectMeal(i) {
+  selectedMeal = i;
+  document.querySelectorAll('#mealTabs .meal-tab').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+}
+
+function renderDietList(records) {
+  if (!records.length) return '<div style="color:var(--text-secondary);font-size:13px;padding:8px">暂无记录</div>';
+  return records.map(r=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${MEALS[r.meal]||''}</span><span style="flex:1">${escHtml(r.name)}</span>
+      <span style="font-weight:600">${r.cal} kcal</span>
+      <button class="btn btn-xs btn-outline" onclick="deleteDiet(${r.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addDiet() {
+  const name = document.getElementById('foodName').value.trim();
+  const cal = parseInt(document.getElementById('foodCal').value);
+  if (!name || isNaN(cal) || cal < 0) { toast('⚠️ 请填写食物名称和卡路里'); return; }
+  app.dietRecords.push({id:Date.now(), name, cal, meal:selectedMeal, date:today()});
+  persist(); renderDiet(); toast('🍽 饮食已记录');
+}
+
+function quickDiet(name, cal) {
+  app.dietRecords.push({id:Date.now(), name, cal, meal:selectedMeal, date:today()});
+  persist(); renderDiet(); toast(`🍽 已记录：${name}`);
+}
+
+function deleteDiet(id) {
+  app.dietRecords = app.dietRecords.filter(r=>r.id!==id);
+  persist(); renderDiet();
+}
+
+function renderDietWeekChart(weekDays, weekCal) {
+  destroyChart('dietWeek');
+  const ctx = document.getElementById('dietWeekChart');
+  if (!ctx) return;
+  const c = getChartColors();
+  const labels = weekDays.map(d=>{
+    const dt = new Date(d+'T00:00:00');
+    return ['日','一','二','三','四','五','六'][dt.getDay()];
+  });
+  charts.dietWeek = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '摄入 (kcal)', data: weekCal,
+        backgroundColor: labels.map((_,i)=>weekCal[i]>app.dietGoal?c.pink:c.cyan),
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        annotation: { annotations: { line1: { type:'line', yMin:app.dietGoal, yMax:app.dietGoal, borderColor:c.pink, borderWidth:1, borderDash:[5,5] } } }
+      },
+      scales: {
+        y: { beginAtZero: true, grid:{color:c.grid}, ticks:{color:c.text, maxTicksLimit:5} },
+        x: { grid:{display:false}, ticks:{color:c.text} }
+      }
+    }
+  });
+}
+
+// --- 3. Exercise ---
+const EXERCISES = [
+  {id:'running',name:'跑步',icon:'🏃',unit:'分钟'},
+  {id:'swimming',name:'游泳',icon:'🏊',unit:'分钟'},
+  {id:'gym',name:'健身',icon:'🏋️',unit:'分钟'},
+  {id:'cycling',name:'骑行',icon:'🚴',unit:'分钟'},
+  {id:'yoga',name:'瑜伽',icon:'🧘',unit:'分钟'},
+  {id:'basketball',name:'篮球',icon:'🏀',unit:'分钟'},
+  {id:'jumping',name:'跳绳',icon:'🪢',unit:'分钟'},
+  {id:'walking',name:'散步',icon:'🚶',unit:'分钟'},
+  {id:'badminton',name:'羽毛球',icon:'🏸',unit:'分钟'},
+  {id:'pingpong',name:'乒乓球',icon:'🏓',unit:'分钟'},
+  {id:'squat',name:'深蹲',icon:'🦵',unit:'次'},
+  {id:'pushup',name:'俯卧撑',icon:'💪',unit:'次'},
+  {id:'plank',name:'平板支撑',icon:'🧎',unit:'分钟'},
+];
+
+function renderExercise() {
+  const el = document.getElementById('mod-exercise');
+  const weekDays = getWeekDays();
+  const todayExercises = app.exercises.filter(e=>e.date===today());
+  const todayDone = todayExercises.length > 0;
+
+  // Calculate streak
+  let streak = 0;
+  const checkDate = new Date(today()+'T00:00:00');
+  while (true) {
+    const ds = checkDate.toISOString().split('T')[0];
+    const hasExercise = app.exercises.some(e=>e.date===ds);
+    if (hasExercise) { streak++; checkDate.setDate(checkDate.getDate()-1); }
+    else break;
+  }
+
+  // Week heatmap
+  const weekDone = weekDays.map(d=>app.exercises.some(e=>e.date===d));
+
+  // Week stats
+  const weekExercises = app.exercises.filter(e=>e.date>=weekStart()&&e.date<=today());
+  const weekMinutes = weekExercises.reduce((s,e)=>s+e.duration,0);
+  const weekCal = weekExercises.reduce((s,e)=>s+e.cal,0);
+
+  el.innerHTML = `
+    <div class="module-header">🏃 运动打卡</div>
+    <div class="stats-row">
+      <div class="stat-card orange"><div class="stat-value">${streak} 天</div><div class="stat-label">连续打卡</div></div>
+      <div class="stat-card cyan"><div class="stat-value">${weekMinutes} 分</div><div class="stat-label">本周运动</div></div>
+      <div class="stat-card purple"><div class="stat-value">${formatCal(weekCal)}</div><div class="stat-label">本周消耗 (kcal)</div></div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div class="card-title">📅 本周打卡热力图</div>
+      <div class="heatmap">
+        ${['一','二','三','四','五','六','日'].map((day,i)=>`
+          <div class="heatmap-col">
+            <div class="heatmap-cell ${weekDone[i]?'done':''}"></div>
+            <div class="heatmap-label">${day}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">✏️ 记录运动</div>
+      <div class="exercise-grid" id="exerciseGrid">
+        ${EXERCISES.map(e=>`<button class="exercise-btn" data-ex="${e.id}" onclick="selectExercise('${e.id}')"><span class="ex-icon">${e.icon}</span>${e.name}</button>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="number" id="exAmount" placeholder="${EXERCISES.find(e=>e.id===selectedExercise)?.unit==='次'?'次数(个)':'时长(分钟)'}" style="width:130px" min="1" onkeydown="if(event.key==='Enter')addExercise()">
+        <input type="number" id="exCal" placeholder="消耗卡路里" style="width:120px" min="0">
+        <button class="btn btn-primary" onclick="addExercise()">记录打卡</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 今日记录</div>
+      <div id="exerciseTodayList">${renderExerciseList(todayExercises)}</div>
+    </div>
+  `;
+}
+
+let selectedExercise = 'running';
+function selectExercise(id) {
+  selectedExercise = id;
+  document.querySelectorAll('#exerciseGrid .exercise-btn').forEach(b=>b.classList.toggle('active',b.dataset.ex===id));
+  // Update input placeholder
+  const ex = EXERCISES.find(e=>e.id===id);
+  const input = document.getElementById('exAmount');
+  if (input && ex) {
+    input.placeholder = ex.unit==='次'?'次数(个)':'时长(分钟)';
+  }
+}
+
+function renderExerciseList(records) {
+  if (!records.length) return '<div style="color:var(--text-secondary);font-size:13px;padding:8px">暂无记录</div>';
+  return records.map(r=>{
+    const ex = EXERCISES.find(e=>e.id===r.type);
+    const isReps = ex?.unit === '次';
+    const amount = isReps ? (r.reps||0) : (r.duration||0);
+    const unitLabel = isReps ? '次' : '分钟';
+    return `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${ex?.icon||''} ${ex?.name||r.type}</span>
+      <span>${amount}${unitLabel}</span><span style="font-weight:600">${r.cal} kcal</span>
+      <button class="btn btn-xs btn-outline" onclick="deleteExercise(${r.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addExercise() {
+  const amount = parseInt(document.getElementById('exAmount').value);
+  const cal = parseInt(document.getElementById('exCal').value);
+  const ex = EXERCISES.find(e=>e.id===selectedExercise);
+  const isReps = ex?.unit === '次';
+  if (isNaN(amount) || amount < 1) { toast(`⚠️ 请填写运动${isReps?'次数':'时长'}`); return; }
+  if (isNaN(cal)) { toast('⚠️ 请填写消耗卡路里'); return; }
+  app.exercises.push({
+    id:Date.now(), type:selectedExercise,
+    duration: isReps ? 0 : amount,
+    reps: isReps ? amount : 0,
+    cal:cal||Math.round(amount*(isReps?0.5:6)), date:today()
+  });
+  persist(); renderExercise(); toast('🏅 运动打卡成功！');
+}
+
+function deleteExercise(id) {
+  app.exercises = app.exercises.filter(e=>e.id!==id);
+  persist(); renderExercise();
+}
+
+// --- 4. Finance ---
+const CATEGORIES_EXPENSE = ['餐饮','交通','购物','娱乐','住房','医疗','教育','其他'];
+const CATEGORIES_INCOME = ['工资','理财','奖金','兼职','报销','其他'];
+const ALL_CATS = [...new Set([...CATEGORIES_EXPENSE,...CATEGORIES_INCOME])];
+
+let financeType = 'expense';
+let financeCat = '餐饮';
+
+function renderFinance() {
+  const el = document.getElementById('mod-finance');
+  const monthRecords = app.finances.filter(f=>f.date>=monthStart()&&f.date<=today());
+  const totalIncome = monthRecords.filter(f=>f.type==='income').reduce((s,f)=>s+f.amount,0);
+  const totalExpense = monthRecords.filter(f=>f.type==='expense').reduce((s,f)=>s+f.amount,0);
+  const balance = totalIncome - totalExpense;
+
+  // Pie data
+  const expenseByCat = {};
+  CATEGORIES_EXPENSE.forEach(c=>expenseByCat[c]=0);
+  monthRecords.filter(f=>f.type==='expense').forEach(f=>{expenseByCat[f.category]=(expenseByCat[f.category]||0)+f.amount;});
+
+  const cats = financeType==='expense' ? CATEGORIES_EXPENSE : CATEGORIES_INCOME;
+
+  el.innerHTML = `
+    <div class="module-header">💰 记账存钱</div>
+    <div class="finance-summary">
+      <div class="fin-summary-item income"><div class="fin-val">${formatMoney(totalIncome)}</div><div class="fin-label">本月收入</div></div>
+      <div class="fin-summary-item expense"><div class="fin-val">${formatMoney(totalExpense)}</div><div class="fin-label">本月支出</div></div>
+      <div class="fin-summary-item balance"><div class="fin-val">${formatMoney(balance)}</div><div class="fin-label">本月结余</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">📊 本月支出分类</div>
+        <div class="chart-wrap"><canvas id="financePieChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">✏️ 记录收支</div>
+        <div class="finance-type">
+          <button class="finance-type-btn ${financeType==='expense'?'active expense':''}" onclick="setFinanceType('expense')">📤 支出</button>
+          <button class="finance-type-btn ${financeType==='income'?'active income':''}" onclick="setFinanceType('income')">📥 收入</button>
+        </div>
+        <div class="category-grid" id="catGrid">
+          ${cats.map(c=>`<button class="cat-btn ${financeCat===c?'active':''}" onclick="setFinanceCat('${c}')">${c}</button>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <input type="number" id="finAmount" placeholder="金额" style="width:120px" step="0.01" min="0" onkeydown="if(event.key==='Enter')addFinance()">
+          <input type="text" id="finNote" placeholder="备注(可选)" style="flex:1;min-width:100px">
+          <button class="btn btn-primary" onclick="addFinance()">记录</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 本月记录</div>
+      <div id="financeList">${renderFinanceList(monthRecords)}</div>
+    </div>
+  `;
+  setTimeout(()=>renderFinancePie(expenseByCat), 100);
+}
+
+function setFinanceType(type) {
+  financeType = type;
+  financeCat = type==='expense' ? '餐饮' : '工资';
+  renderFinance();
+}
+
+function setFinanceCat(cat) {
+  financeCat = cat;
+  document.querySelectorAll('#catGrid .cat-btn').forEach(b=>b.classList.toggle('active',b.textContent===cat));
+}
+
+function renderFinanceList(records) {
+  if (!records.length) return '<div style="color:var(--text-secondary);font-size:13px;padding:8px">暂无记录</div>';
+  return records.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).map(r=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${r.type==='income'?'📥':'📤'}</span>
+      <span style="flex:1">${escHtml(r.category)} ${r.note?escHtml(r.note):''}</span>
+      <span style="font-weight:600;color:${r.type==='income'?'var(--green)':'var(--pink)'}">${r.type==='income'?'+':'-'}${formatMoney(r.amount)}</span>
+      <span style="color:var(--text-tertiary);font-size:11px">${r.date}</span>
+      <button class="btn btn-xs btn-outline" onclick="deleteFinance(${r.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addFinance() {
+  const amount = parseFloat(document.getElementById('finAmount').value);
+  const note = document.getElementById('finNote').value.trim();
+  if (isNaN(amount) || amount <= 0) { toast('⚠️ 请填写金额'); return; }
+  app.finances.push({id:Date.now(), type:financeType, category:financeCat, amount, note, date:today()});
+  persist(); renderFinance(); toast('💰 已记录');
+}
+
+function deleteFinance(id) {
+  app.finances = app.finances.filter(f=>f.id!==id);
+  persist(); renderFinance();
+}
+
+function renderFinancePie(expenseByCat) {
+  destroyChart('financePie');
+  const ctx = document.getElementById('financePieChart');
+  if (!ctx) return;
+  const c = getChartColors();
+  const colors = [c.pink,c.orange,c.purple,c.cyan,c.indigo,c.blue,'#8e8e93','#aeaeb2'];
+  const entries = Object.entries(expenseByCat).filter(([,v])=>v>0);
+  charts.financePie = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(([k])=>k),
+      datasets: [{data:entries.map(([,v])=>v),backgroundColor:entries.map((_,i)=>colors[i%colors.length]),borderWidth:0}]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend:{position:'bottom',labels:{color:c.text,padding:12,usePointStyle:true,pointStyleWidth:8}}}
+    }
+  });
+}
+
+// --- 5. Reading ---
+function renderReading() {
+  const el = document.getElementById('mod-reading');
+  const colors = ['purple','cyan','indigo'];
+  el.innerHTML = `
+    <div class="module-header">📚 读书收获</div>
+    <div class="card">
+      <div class="card-title">➕ 添加书籍</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="text" id="bookTitle" placeholder="书名" style="flex:1;min-width:120px">
+        <input type="text" id="bookAuthor" placeholder="作者" style="width:120px">
+        <input type="number" id="bookPages" placeholder="总页数" style="width:90px" min="1" onkeydown="if(event.key==='Enter')addBook()">
+        <button class="btn btn-primary" onclick="addBook()">添加</button>
+      </div>
+    </div>
+    <div id="bookList">${renderBookList(app.books, colors)}</div>
+  `;
+}
+
+function renderBookList(books, colors) {
+  if (!books.length) return '<div class="card"><div style="color:var(--text-secondary);text-align:center;padding:20px">📖 还没有添加书籍，快来添加吧！</div></div>';
+  return books.map((b,i)=>`
+    <div class="card" id="book-${b.id}">
+      <div class="book-card" style="background:transparent;padding:0">
+        <div style="font-size:36px">📖</div>
+        <div class="book-info">
+          <div class="book-title">${escHtml(b.title)}</div>
+          <div class="book-author">${escHtml(b.author)} · ${b.totalPages}页</div>
+          <div class="progress-bar"><div class="progress-fill ${colors[i%3]}" style="width:${Math.round(b.current/b.totalPages*100)}%"></div></div>
+          <div class="progress-text">进度 ${b.current}/${b.totalPages} 页（${Math.round(b.current/b.totalPages*100)}%）</div>
+          <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+            <input type="number" value="${b.current}" style="width:70px;padding:6px 8px;font-size:12px" min="0" max="${b.totalPages}" id="bookProgress-${b.id}" onchange="updateBookProgress(${b.id},this.value)">
+            <span style="font-size:12px;color:var(--text-secondary)">/ ${b.totalPages} 页</span>
+            <button class="btn btn-sm btn-secondary" onclick="updateBookProgress(${b.id},document.getElementById('bookProgress-${b.id}').value)">更新</button>
+            <button class="btn btn-sm btn-outline" onclick="deleteBook(${b.id})">删除</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="section-title">📝 读书笔记</div>
+        <textarea class="note-textarea" id="bookNote-${b.id}" placeholder="写下你的读书笔记...">${escHtml(b.note||'')}</textarea>
+        <button class="btn btn-sm btn-secondary" style="margin-top:6px" onclick="saveBookNote(${b.id})">保存笔记</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addBook() {
+  const title = document.getElementById('bookTitle').value.trim();
+  const author = document.getElementById('bookAuthor').value.trim();
+  const totalPages = parseInt(document.getElementById('bookPages').value);
+  if (!title || !author || isNaN(totalPages) || totalPages<1) { toast('⚠️ 请填写完整信息'); return; }
+  app.books.push({id:Date.now(), title, author, totalPages, current:0, note:''});
+  persist(); renderReading(); toast('📚 书籍已添加');
+}
+
+function updateBookProgress(id, val) {
+  const book = app.books.find(b=>b.id===id);
+  if (!book) return;
+  const n = Math.max(0, Math.min(book.totalPages, parseInt(val)||0));
+  book.current = n; persist(); renderReading();
+}
+
+function saveBookNote(id) {
+  const book = app.books.find(b=>b.id===id);
+  if (!book) return;
+  book.note = document.getElementById('bookNote-'+id).value;
+  persist(); toast('📝 笔记已保存');
+}
+
+function deleteBook(id) {
+  app.books = app.books.filter(b=>b.id!==id);
+  persist(); renderReading();
+}
+
+// --- 6. Mood ---
+const MOODS = [
+  {emoji:'😊',label:'开心',value:5},
+  {emoji:'😌',label:'平静',value:4},
+  {emoji:'😐',label:'一般',value:3},
+  {emoji:'😔',label:'难过',value:2},
+  {emoji:'😤',label:'生气',value:1},
+  {emoji:'😰',label:'焦虑',value:1.5},
+];
+
+function renderMood() {
+  const el = document.getElementById('mod-mood');
+  const todayMood = app.moods.find(m=>m.date===today());
+  const weekDays = getWeekDays();
+  const weekMoods = weekDays.map(d=>{
+    const m = app.moods.find(mo=>mo.date===d);
+    return m ? m.value : null;
+  });
+
+  el.innerHTML = `
+    <div class="module-header">💭 心情记录</div>
+    <div class="card" style="text-align:center">
+      <div class="card-title">今天心情如何？</div>
+      <div class="mood-grid">
+        ${MOODS.map(m=>`<button class="mood-btn ${todayMood&&todayMood.emoji===m.emoji?'active':''}" onclick="setMood('${m.emoji}',${m.value})" title="${m.label}">${m.emoji}</button>`).join('')}
+      </div>
+      ${todayMood ? `<div style="font-size:15px;font-weight:600;color:var(--brand-purple)">今日心情：${todayMood.emoji} ${MOODS.find(m=>m.emoji===todayMood.emoji)?.label||''}</div>` : ''}
+    </div>
+    <div class="card">
+      <div class="card-title">📝 心情日记</div>
+      <textarea class="note-textarea" id="moodDiary" placeholder="写写今天的心情...">${todayMood?.diary||''}</textarea>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="saveMoodDiary()">💾 保存日记</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📈 本周心情趋势</div>
+      <div class="chart-wrap"><canvas id="moodWeekChart"></canvas></div>
+    </div>
+  `;
+  setTimeout(()=>renderMoodChart(weekDays, weekMoods), 100);
+}
+
+function setMood(emoji, value) {
+  const existing = app.moods.find(m=>m.date===today());
+  if (existing) { existing.emoji = emoji; existing.value = value; }
+  else { app.moods.push({id:Date.now(), emoji, value, date:today(), diary:''}); }
+  persist(); renderMood(); toast(`${emoji} 心情已记录`);
+}
+
+function saveMoodDiary() {
+  const diary = document.getElementById('moodDiary').value;
+  const existing = app.moods.find(m=>m.date===today());
+  if (existing) { existing.diary = diary; }
+  else { app.moods.push({id:Date.now(), emoji:'😐', value:3, date:today(), diary}); }
+  persist(); toast('📝 日记已保存');
+}
+
+function renderMoodChart(weekDays, weekMoods) {
+  destroyChart('moodWeek');
+  const ctx = document.getElementById('moodWeekChart');
+  if (!ctx) return;
+  const c = getChartColors();
+  const labels = weekDays.map(d=>{const dt=new Date(d+'T00:00:00');return ['日','一','二','三','四','五','六'][dt.getDay()];});
+  const gradient = ctx.getContext('2d').createLinearGradient(0,0,0,300);
+  gradient.addColorStop(0, c.purple); gradient.addColorStop(1, c.pink);
+  charts.moodWeek = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label:'心情指数',data:weekMoods,
+        borderColor: gradient, backgroundColor: 'rgba(175,82,222,0.08)',
+        fill: true, tension: 0.4, pointRadius: 6, pointBackgroundColor: c.purple,
+        spanGaps: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        y: { min:0, max:6, grid:{color:c.grid}, ticks:{color:c.text, stepSize:1, callback:v=>['','😤','😔','😐','😌','😊',''][v]||''} },
+        x: { grid:{display:false}, ticks:{color:c.text} }
+      }
+    }
+  });
+}
+
+// CET-4 Vocabulary (200 high-frequency words with phonetics)
+const CET4_WORDS = [
+  {word:'abandon',phonetic:'/əˈbændən/',meaning:'v. 放弃；遗弃'},
+  {word:'ability',phonetic:'/əˈbɪləti/',meaning:'n. 能力；才能'},
+  {word:'abroad',phonetic:'/əˈbrɔːd/',meaning:'adv. 在国外；到国外'},
+  {word:'absence',phonetic:'/ˈæbsəns/',meaning:'n. 缺席；不在'},
+  {word:'absolute',phonetic:'/ˈæbsəluːt/',meaning:'adj. 绝对的；完全的'},
+  {word:'absorb',phonetic:'/əbˈzɔːrb/',meaning:'v. 吸收；吸引'},
+  {word:'abstract',phonetic:'/ˈæbstrækt/',meaning:'adj. 抽象的；n. 摘要'},
+  {word:'abundant',phonetic:'/əˈbʌndənt/',meaning:'adj. 丰富的；充裕的'},
+  {word:'academic',phonetic:'/ˌækəˈdemɪk/',meaning:'adj. 学术的；学院的'},
+  {word:'accelerate',phonetic:'/əkˈseləreɪt/',meaning:'v. 加速；促进'},
+  {word:'accept',phonetic:'/əkˈsept/',meaning:'v. 接受；承认'},
+  {word:'access',phonetic:'/ˈækses/',meaning:'n. 通道；使用权；v. 访问'},
+  {word:'accompany',phonetic:'/əˈkʌmpəni/',meaning:'v. 陪伴；伴随'},
+  {word:'accomplish',phonetic:'/əˈkɑːmplɪʃ/',meaning:'v. 完成；实现'},
+  {word:'account',phonetic:'/əˈkaʊnt/',meaning:'n. 账户；说明；v. 解释'},
+  {word:'accurate',phonetic:'/ˈækjərət/',meaning:'adj. 准确的；精确的'},
+  {word:'achieve',phonetic:'/əˈtʃiːv/',meaning:'v. 达到；取得'},
+  {word:'acknowledge',phonetic:'/əkˈnɑːlɪdʒ/',meaning:'v. 承认；确认'},
+  {word:'acquire',phonetic:'/əˈkwaɪər/',meaning:'v. 获得；习得'},
+  {word:'adapt',phonetic:'/əˈdæpt/',meaning:'v. 适应；改编'},
+  {word:'adequate',phonetic:'/ˈædɪkwət/',meaning:'adj. 充足的；适当的'},
+  {word:'adjust',phonetic:'/əˈdʒʌst/',meaning:'v. 调整；适应'},
+  {word:'administration',phonetic:'/ədˌmɪnɪˈstreɪʃn/',meaning:'n. 管理；行政'},
+  {word:'admire',phonetic:'/ədˈmaɪər/',meaning:'v. 钦佩；赞赏'},
+  {word:'admit',phonetic:'/ədˈmɪt/',meaning:'v. 承认；允许进入'},
+  {word:'adopt',phonetic:'/əˈdɑːpt/',meaning:'v. 采纳；收养'},
+  {word:'advance',phonetic:'/ədˈvæns/',meaning:'v. 前进；推进；n. 进步'},
+  {word:'advantage',phonetic:'/ədˈvæntɪdʒ/',meaning:'n. 优势；有利条件'},
+  {word:'advertise',phonetic:'/ˈædvərtaɪz/',meaning:'v. 做广告；宣传'},
+  {word:'affair',phonetic:'/əˈfer/',meaning:'n. 事务；事件'},
+  {word:'afford',phonetic:'/əˈfɔːrd/',meaning:'v. 负担得起；提供'},
+  {word:'aggressive',phonetic:'/əˈɡresɪv/',meaning:'adj. 侵略的；好斗的'},
+  {word:'agreement',phonetic:'/əˈɡriːmənt/',meaning:'n. 协议；同意'},
+  {word:'agriculture',phonetic:'/ˈæɡrɪkʌltʃər/',meaning:'n. 农业；农学'},
+  {word:'alcohol',phonetic:'/ˈælkəhɔːl/',meaning:'n. 酒精；酒'},
+  {word:'alternative',phonetic:'/ɔːlˈtɜːrnətɪv/',meaning:'n. 替代方案；adj. 替代的'},
+  {word:'amaze',phonetic:'/əˈmeɪz/',meaning:'v. 使惊奇；使惊愕'},
+  {word:'ambassador',phonetic:'/æmˈbæsədər/',meaning:'n. 大使；代表'},
+  {word:'ambition',phonetic:'/æmˈbɪʃn/',meaning:'n. 雄心；野心'},
+  {word:'amount',phonetic:'/əˈmaʊnt/',meaning:'n. 数量；金额'},
+  {word:'analyze',phonetic:'/ˈænəlaɪz/',meaning:'v. 分析；解析'},
+  {word:'ancestor',phonetic:'/ˈænsestər/',meaning:'n. 祖先；祖宗'},
+  {word:'anniversary',phonetic:'/ˌænɪˈvɜːrsəri/',meaning:'n. 周年纪念日'},
+  {word:'announce',phonetic:'/əˈnaʊns/',meaning:'v. 宣布；通告'},
+  {word:'annual',phonetic:'/ˈænjuəl/',meaning:'adj. 年度的；每年的'},
+  {word:'anticipate',phonetic:'/ænˈtɪsɪpeɪt/',meaning:'v. 预期；期望'},
+  {word:'anxiety',phonetic:'/æŋˈzaɪəti/',meaning:'n. 焦虑；忧虑'},
+  {word:'apartment',phonetic:'/əˈpɑːrtmənt/',meaning:'n. 公寓；房间'},
+  {word:'apparent',phonetic:'/əˈpærənt/',meaning:'adj. 明显的；表面上的'},
+  {word:'appeal',phonetic:'/əˈpiːl/',meaning:'v./n. 呼吁；吸引'},
+  {word:'appetite',phonetic:'/ˈæpɪtaɪt/',meaning:'n. 食欲；胃口'},
+  {word:'appliance',phonetic:'/əˈplaɪəns/',meaning:'n. 电器；器具'},
+  {word:'application',phonetic:'/ˌæplɪˈkeɪʃn/',meaning:'n. 申请；应用'},
+  {word:'appoint',phonetic:'/əˈpɔɪnt/',meaning:'v. 任命；指定'},
+  {word:'appreciate',phonetic:'/əˈpriːʃieɪt/',meaning:'v. 欣赏；感激'},
+  {word:'approach',phonetic:'/əˈproʊtʃ/',meaning:'v. 接近；n. 方法'},
+  {word:'appropriate',phonetic:'/əˈproʊpriət/',meaning:'adj. 适当的；合适的'},
+  {word:'approve',phonetic:'/əˈpruːv/',meaning:'v. 批准；赞成'},
+  {word:'architecture',phonetic:'/ˈɑːrkɪtektʃər/',meaning:'n. 建筑学；建筑风格'},
+  {word:'argue',phonetic:'/ˈɑːrɡjuː/',meaning:'v. 争论；辩论'},
+  {word:'arise',phonetic:'/əˈraɪz/',meaning:'v. 出现；产生'},
+  {word:'arrange',phonetic:'/əˈreɪndʒ/',meaning:'v. 安排；整理'},
+  {word:'arrest',phonetic:'/əˈrest/',meaning:'v./n. 逮捕；拘留'},
+  {word:'artificial',phonetic:'/ˌɑːrtɪˈfɪʃl/',meaning:'adj. 人造的；人工的'},
+  {word:'aspect',phonetic:'/ˈæspekt/',meaning:'n. 方面；层面'},
+  {word:'assemble',phonetic:'/əˈsembl/',meaning:'v. 集合；组装'},
+  {word:'assess',phonetic:'/əˈses/',meaning:'v. 评估；评定'},
+  {word:'assign',phonetic:'/əˈsaɪn/',meaning:'v. 分配；指派'},
+  {word:'assist',phonetic:'/əˈsɪst/',meaning:'v. 帮助；协助'},
+  {word:'associate',phonetic:'/əˈsoʊʃieɪt/',meaning:'v. 关联；联系；n. 同事'},
+  {word:'assume',phonetic:'/əˈsuːm/',meaning:'v. 假设；承担'},
+  {word:'atmosphere',phonetic:'/ˈætməsfɪr/',meaning:'n. 气氛；大气层'},
+  {word:'attach',phonetic:'/əˈtætʃ/',meaning:'v. 附上；连接'},
+  {word:'attain',phonetic:'/əˈteɪn/',meaning:'v. 达到；获得'},
+  {word:'attempt',phonetic:'/əˈtempt/',meaning:'v./n. 尝试；企图'},
+  {word:'attend',phonetic:'/əˈtend/',meaning:'v. 参加；出席'},
+  {word:'attitude',phonetic:'/ˈætɪtuːd/',meaning:'n. 态度；看法'},
+  {word:'attract',phonetic:'/əˈtrækt/',meaning:'v. 吸引；引起'},
+  {word:'attribute',phonetic:'/əˈtrɪbjuːt/',meaning:'v. 归因于；n. 属性'},
+  {word:'audience',phonetic:'/ˈɔːdiəns/',meaning:'n. 观众；听众'},
+  {word:'authority',phonetic:'/əˈθɔːrəti/',meaning:'n. 权威；当局'},
+  {word:'automatic',phonetic:'/ˌɔːtəˈmætɪk/',meaning:'adj. 自动的；无意识的'},
+  {word:'available',phonetic:'/əˈveɪləbl/',meaning:'adj. 可用的；有效的'},
+  {word:'avenue',phonetic:'/ˈævənuː/',meaning:'n. 大街；途径'},
+  {word:'average',phonetic:'/ˈævərɪdʒ/',meaning:'n. 平均；adj. 普通的'},
+  {word:'avoid',phonetic:'/əˈvɔɪd/',meaning:'v. 避免；回避'},
+  {word:'award',phonetic:'/əˈwɔːrd/',meaning:'n. 奖品；v. 授予'},
+  {word:'aware',phonetic:'/əˈwer/',meaning:'adj. 意识到的；知道的'},
+  {word:'barrier',phonetic:'/ˈbæriər/',meaning:'n. 障碍；壁垒'},
+  {word:'battery',phonetic:'/ˈbætəri/',meaning:'n. 电池；一组'},
+  {word:'battle',phonetic:'/ˈbætl/',meaning:'n. 战斗；v. 斗争'},
+  {word:'behavior',phonetic:'/bɪˈheɪvjər/',meaning:'n. 行为；举止'},
+  {word:'belief',phonetic:'/bɪˈliːf/',meaning:'n. 信念；信仰'},
+  {word:'beneath',phonetic:'/bɪˈniːθ/',meaning:'prep. 在…之下'},
+  {word:'benefit',phonetic:'/ˈbenɪfɪt/',meaning:'n. 利益；好处；v. 受益'},
+  {word:'bitter',phonetic:'/ˈbɪtər/',meaning:'adj. 苦的；痛苦的'},
+  {word:'blame',phonetic:'/bleɪm/',meaning:'v. 责备；归咎于'},
+  {word:'border',phonetic:'/ˈbɔːrdər/',meaning:'n. 边界；边境'},
+  {word:'bother',phonetic:'/ˈbɑːðər/',meaning:'v. 打扰；烦恼'},
+  {word:'boundary',phonetic:'/ˈbaʊndri/',meaning:'n. 边界；分界线'},
+  {word:'brand',phonetic:'/brænd/',meaning:'n. 品牌；商标'},
+  {word:'broadcast',phonetic:'/ˈbrɔːdkæst/',meaning:'v./n. 广播；播送'},
+  {word:'budget',phonetic:'/ˈbʌdʒɪt/',meaning:'n. 预算；v. 做预算'},
+  {word:'burden',phonetic:'/ˈbɜːrdn/',meaning:'n. 负担；重任'},
+  {word:'calculate',phonetic:'/ˈkælkjuleɪt/',meaning:'v. 计算；估计'},
+  {word:'campaign',phonetic:'/kæmˈpeɪn/',meaning:'n. 运动；战役；v. 参加运动'},
+  {word:'candidate',phonetic:'/ˈkændɪdət/',meaning:'n. 候选人；应试者'},
+  {word:'capable',phonetic:'/ˈkeɪpəbl/',meaning:'adj. 有能力的；能胜任的'},
+  {word:'capacity',phonetic:'/kəˈpæsəti/',meaning:'n. 容量；能力'},
+  {word:'capture',phonetic:'/ˈkæptʃər/',meaning:'v. 捕获；俘获'},
+  {word:'career',phonetic:'/kəˈrɪr/',meaning:'n. 职业；生涯'},
+  {word:'category',phonetic:'/ˈkætəɡɔːri/',meaning:'n. 类别；种类'},
+  {word:'celebrate',phonetic:'/ˈselɪbreɪt/',meaning:'v. 庆祝；赞美'},
+  {word:'challenge',phonetic:'/ˈtʃælɪndʒ/',meaning:'n. 挑战；v. 向…挑战'},
+  {word:'character',phonetic:'/ˈkærəktər/',meaning:'n. 性格；角色；字符'},
+  {word:'characteristic',phonetic:'/ˌkærəktəˈrɪstɪk/',meaning:'n. 特征；adj. 典型的'},
+  {word:'circumstance',phonetic:'/ˈsɜːrkəmstæns/',meaning:'n. 环境；情况'},
+  {word:'claim',phonetic:'/kleɪm/',meaning:'v./n. 声称；要求；索赔'},
+  {word:'classify',phonetic:'/ˈklæsɪfaɪ/',meaning:'v. 分类；归类'},
+  {word:'climate',phonetic:'/ˈklaɪmət/',meaning:'n. 气候；风气'},
+  {word:'colleague',phonetic:'/ˈkɑːliːɡ/',meaning:'n. 同事；同僚'},
+  {word:'combine',phonetic:'/kəmˈbaɪn/',meaning:'v. 结合；联合'},
+  {word:'comfort',phonetic:'/ˈkʌmfərt/',meaning:'n. 舒适；安慰；v. 安慰'},
+  {word:'command',phonetic:'/kəˈmænd/',meaning:'v./n. 命令；指挥'},
+  {word:'comment',phonetic:'/ˈkɑːment/',meaning:'n./v. 评论；意见'},
+  {word:'commercial',phonetic:'/kəˈmɜːrʃl/',meaning:'adj. 商业的；n. 广告'},
+  {word:'commit',phonetic:'/kəˈmɪt/',meaning:'v. 犯（罪）；承诺；投入'},
+  {word:'communicate',phonetic:'/kəˈmjuːnɪkeɪt/',meaning:'v. 交流；沟通'},
+  {word:'community',phonetic:'/kəˈmjuːnəti/',meaning:'n. 社区；团体'},
+  {word:'companion',phonetic:'/kəmˈpæniən/',meaning:'n. 同伴；伙伴'},
+  {word:'compare',phonetic:'/kəmˈper/',meaning:'v. 比较；对比'},
+  {word:'compete',phonetic:'/kəmˈpiːt/',meaning:'v. 竞争；比赛'},
+  {word:'competent',phonetic:'/ˈkɑːmpɪtənt/',meaning:'adj. 有能力的；胜任的'},
+  {word:'complain',phonetic:'/kəmˈpleɪn/',meaning:'v. 抱怨；投诉'},
+  {word:'complex',phonetic:'/kəmˈpleks/',meaning:'adj. 复杂的；n. 综合体'},
+  {word:'component',phonetic:'/kəmˈpoʊnənt/',meaning:'n. 成分；组件'},
+  {word:'concentrate',phonetic:'/ˈkɑːnsntreɪt/',meaning:'v. 集中；专注'},
+  {word:'concept',phonetic:'/ˈkɑːnsept/',meaning:'n. 概念；观念'},
+  {word:'concern',phonetic:'/kənˈsɜːrn/',meaning:'n. 关心；忧虑；v. 涉及'},
+  {word:'conclude',phonetic:'/kənˈkluːd/',meaning:'v. 得出结论；结束'},
+  {word:'conduct',phonetic:'/kənˈdʌkt/',meaning:'v. 进行；指挥；n. 行为'},
+  {word:'conference',phonetic:'/ˈkɑːnfərəns/',meaning:'n. 会议；讨论会'},
+  {word:'confidence',phonetic:'/ˈkɑːnfɪdəns/',meaning:'n. 信心；信任'},
+  {word:'confirm',phonetic:'/kənˈfɜːrm/',meaning:'v. 确认；证实'},
+  {word:'conflict',phonetic:'/ˈkɑːnflɪkt/',meaning:'n. 冲突；矛盾'},
+  {word:'confuse',phonetic:'/kənˈfjuːz/',meaning:'v. 使困惑；混淆'},
+  {word:'connect',phonetic:'/kəˈnekt/',meaning:'v. 连接；联系'},
+  {word:'conscious',phonetic:'/ˈkɑːnʃəs/',meaning:'adj. 有意识的；清醒的'},
+  {word:'consequence',phonetic:'/ˈkɑːnsɪkwens/',meaning:'n. 结果；后果'},
+  {word:'conservative',phonetic:'/kənˈsɜːrvətɪv/',meaning:'adj. 保守的；n. 保守派'},
+  {word:'consider',phonetic:'/kənˈsɪdər/',meaning:'v. 考虑；认为'},
+  {word:'consistent',phonetic:'/kənˈsɪstənt/',meaning:'adj. 一致的；始终如一的'},
+  {word:'constant',phonetic:'/ˈkɑːnstənt/',meaning:'adj. 持续不断的；恒定的'},
+  {word:'construct',phonetic:'/kənˈstrʌkt/',meaning:'v. 建造；构建'},
+  {word:'consume',phonetic:'/kənˈsuːm/',meaning:'v. 消费；消耗'},
+  {word:'contain',phonetic:'/kənˈteɪn/',meaning:'v. 包含；容纳'},
+  {word:'contemporary',phonetic:'/kənˈtempəreri/',meaning:'adj. 当代的；同时代的'},
+  {word:'contribute',phonetic:'/kənˈtrɪbjuːt/',meaning:'v. 贡献；捐献；投稿'},
+  {word:'convenient',phonetic:'/kənˈviːniənt/',meaning:'adj. 方便的；便利的'},
+  {word:'convince',phonetic:'/kənˈvɪns/',meaning:'v. 说服；使确信'},
+  {word:'cooperate',phonetic:'/koʊˈɑːpəreɪt/',meaning:'v. 合作；协作'},
+  {word:'corporation',phonetic:'/ˌkɔːrpəˈreɪʃn/',meaning:'n. 公司；企业'},
+  {word:'counter',phonetic:'/ˈkaʊntər/',meaning:'n. 柜台；v. 反驳；adj. 相反的'},
+  {word:'crash',phonetic:'/kræʃ/',meaning:'v./n. 碰撞；崩溃'},
+  {word:'create',phonetic:'/kriˈeɪt/',meaning:'v. 创造；创建'},
+  {word:'crime',phonetic:'/kraɪm/',meaning:'n. 犯罪；罪行'},
+  {word:'crisis',phonetic:'/ˈkraɪsɪs/',meaning:'n. 危机；紧要关头'},
+  {word:'critical',phonetic:'/ˈkrɪtɪkl/',meaning:'adj. 批评的；关键的；危急的'},
+  {word:'cultivate',phonetic:'/ˈkʌltɪveɪt/',meaning:'v. 培养；耕作'},
+  {word:'curiosity',phonetic:'/ˌkjʊriˈɑːsəti/',meaning:'n. 好奇心；求知欲'},
+  {word:'current',phonetic:'/ˈkɜːrənt/',meaning:'adj. 当前的；n. 水流；电流'},
+  {word:'debate',phonetic:'/dɪˈbeɪt/',meaning:'n./v. 辩论；争论'},
+  {word:'decade',phonetic:'/ˈdekeɪd/',meaning:'n. 十年'},
+  {word:'decline',phonetic:'/dɪˈklaɪn/',meaning:'v./n. 下降；衰退；拒绝'},
+  {word:'decorate',phonetic:'/ˈdekəreɪt/',meaning:'v. 装饰；装潢'},
+  {word:'decrease',phonetic:'/dɪˈkriːs/',meaning:'v./n. 减少；降低'},
+  {word:'defend',phonetic:'/dɪˈfend/',meaning:'v. 防御；保卫；辩护'},
+  {word:'define',phonetic:'/dɪˈfaɪn/',meaning:'v. 定义；界定'},
+  {word:'definitely',phonetic:'/ˈdefɪnətli/',meaning:'adv. 肯定地；明确地'},
+  {word:'deliver',phonetic:'/dɪˈlɪvər/',meaning:'v. 递送；发表；接生'},
+  {word:'demand',phonetic:'/dɪˈmænd/',meaning:'v./n. 要求；需求'},
+  {word:'demonstrate',phonetic:'/ˈdemənstreɪt/',meaning:'v. 演示；证明；示威'},
+  {word:'depart',phonetic:'/dɪˈpɑːrt/',meaning:'v. 离开；出发'},
+  {word:'depend',phonetic:'/dɪˈpend/',meaning:'v. 依赖；取决于'},
+  {word:'deposit',phonetic:'/dɪˈpɑːzɪt/',meaning:'v. 存放；n. 存款；押金'},
+  {word:'describe',phonetic:'/dɪˈskraɪb/',meaning:'v. 描述；形容'},
+  {word:'deserve',phonetic:'/dɪˈzɜːrv/',meaning:'v. 值得；应得'},
+  {word:'desire',phonetic:'/dɪˈzaɪər/',meaning:'n./v. 渴望；欲望'},
+  {word:'despite',phonetic:'/dɪˈspaɪt/',meaning:'prep. 尽管；不管'},
+  {word:'destination',phonetic:'/ˌdestɪˈneɪʃn/',meaning:'n. 目的地；终点'},
+  {word:'determine',phonetic:'/dɪˈtɜːrmɪn/',meaning:'v. 决定；确定'},
+  {word:'develop',phonetic:'/dɪˈveləp/',meaning:'v. 发展；开发；培养'},
+  {word:'device',phonetic:'/dɪˈvaɪs/',meaning:'n. 设备；装置'},
+  {word:'devote',phonetic:'/dɪˈvoʊt/',meaning:'v. 致力于；奉献'},
+  {word:'discipline',phonetic:'/ˈdɪsəplɪn/',meaning:'n. 纪律；学科；v. 训练'},
+  {word:'discount',phonetic:'/ˈdɪskaʊnt/',meaning:'n. 折扣；v. 打折'},
+  {word:'display',phonetic:'/dɪˈspleɪ/',meaning:'v./n. 展示；显示'},
+  {word:'distinguish',phonetic:'/dɪˈstɪŋɡwɪʃ/',meaning:'v. 区分；辨别'},
+  {word:'distribute',phonetic:'/dɪˈstrɪbjuːt/',meaning:'v. 分配；分发'},
+  {word:'document',phonetic:'/ˈdɑːkjumənt/',meaning:'n. 文件；文档；v. 记录'},
+  {word:'domestic',phonetic:'/dəˈmestɪk/',meaning:'adj. 国内的；家庭的'},
+  {word:'dominate',phonetic:'/ˈdɑːmɪneɪt/',meaning:'v. 支配；主导'},
+  {word:'dramatic',phonetic:'/drəˈmætɪk/',meaning:'adj. 戏剧性的；剧烈的'},
+  {word:'economy',phonetic:'/ɪˈkɑːnəmi/',meaning:'n. 经济；节约'},
+  {word:'edition',phonetic:'/ɪˈdɪʃn/',meaning:'n. 版本；版次'},
+  {word:'efficient',phonetic:'/ɪˈfɪʃnt/',meaning:'adj. 高效的；有效率的'},
+  {word:'eliminate',phonetic:'/ɪˈlɪmɪneɪt/',meaning:'v. 消除；淘汰'},
+  {word:'embrace',phonetic:'/ɪmˈbreɪs/',meaning:'v. 拥抱；包含；接受'},
+  {word:'emerge',phonetic:'/iˈmɜːrdʒ/',meaning:'v. 出现；浮现'},
+  {word:'emotion',phonetic:'/ɪˈmoʊʃn/',meaning:'n. 情感；情绪'},
+  {word:'emphasis',phonetic:'/ˈemfəsɪs/',meaning:'n. 强调；重点'},
+  {word:'employ',phonetic:'/ɪmˈplɔɪ/',meaning:'v. 雇用；使用'},
+  {word:'enable',phonetic:'/ɪˈneɪbl/',meaning:'v. 使能够；启用'},
+  {word:'encounter',phonetic:'/ɪnˈkaʊntər/',meaning:'v./n. 遭遇；遇到'},
+  {word:'encourage',phonetic:'/ɪnˈkɜːrɪdʒ/',meaning:'v. 鼓励；激励'},
+  {word:'enormous',phonetic:'/ɪˈnɔːrməs/',meaning:'adj. 巨大的；庞大的'},
+  {word:'ensure',phonetic:'/ɪnˈʃʊr/',meaning:'v. 确保；保证'},
+  {word:'enterprise',phonetic:'/ˈentərpraɪz/',meaning:'n. 企业；事业'},
+  {word:'enthusiasm',phonetic:'/ɪnˈθuːziæzəm/',meaning:'n. 热情；热忱'},
+  {word:'environment',phonetic:'/ɪnˈvaɪrənmənt/',meaning:'n. 环境；周围'},
+  {word:'equipment',phonetic:'/ɪˈkwɪpmənt/',meaning:'n. 设备；装备'},
+  {word:'essential',phonetic:'/ɪˈsenʃl/',meaning:'adj. 本质的；必要的'},
+  {word:'establish',phonetic:'/ɪˈstæblɪʃ/',meaning:'v. 建立；设立'},
+  {word:'estimate',phonetic:'/ˈestɪmeɪt/',meaning:'v./n. 估计；估算'},
+  {word:'evaluate',phonetic:'/ɪˈvæljueɪt/',meaning:'v. 评价；评估'},
+  {word:'eventually',phonetic:'/ɪˈventʃuəli/',meaning:'adv. 最终；终于'},
+  {word:'evidence',phonetic:'/ˈevɪdəns/',meaning:'n. 证据；迹象'},
+  {word:'exactly',phonetic:'/ɪɡˈzæktli/',meaning:'adv. 精确地；恰好'},
+  {word:'exchange',phonetic:'/ɪksˈtʃeɪndʒ/',meaning:'v./n. 交换；兑换'},
+  {word:'executive',phonetic:'/ɪɡˈzekjətɪv/',meaning:'n. 高管；adj. 行政的'},
+  {word:'existence',phonetic:'/ɪɡˈzɪstəns/',meaning:'n. 存在；生存'},
+  {word:'expand',phonetic:'/ɪkˈspænd/',meaning:'v. 扩展；膨胀'},
+  {word:'expect',phonetic:'/ɪkˈspekt/',meaning:'v. 期望；预期'},
+  {word:'expense',phonetic:'/ɪkˈspens/',meaning:'n. 花费；代价'},
+  {word:'experiment',phonetic:'/ɪkˈsperɪmənt/',meaning:'n. 实验；v. 做实验'},
+  {word:'expert',phonetic:'/ˈekspɜːrt/',meaning:'n. 专家；adj. 熟练的'},
+  {word:'explain',phonetic:'/ɪkˈspleɪn/',meaning:'v. 解释；说明'},
+  {word:'explore',phonetic:'/ɪkˈsplɔːr/',meaning:'v. 探索；探究'},
+  {word:'export',phonetic:'/ɪkˈspɔːrt/',meaning:'v./n. 出口；输出'},
+  {word:'expose',phonetic:'/ɪkˈspoʊz/',meaning:'v. 暴露；揭露'},
+  {word:'extend',phonetic:'/ɪkˈstend/',meaning:'v. 延伸；扩展'},
+  {word:'external',phonetic:'/ɪkˈstɜːrnl/',meaning:'adj. 外部的；外面的'},
+  {word:'extraordinary',phonetic:'/ɪkˈstrɔːrdəneri/',meaning:'adj. 非凡的；特别的'},
+  {word:'extreme',phonetic:'/ɪkˈstriːm/',meaning:'adj. 极端的；极度的'},
+  {word:'facility',phonetic:'/fəˈsɪləti/',meaning:'n. 设施；设备'},
+  {word:'factor',phonetic:'/ˈfæktər/',meaning:'n. 因素；要素'},
+  {word:'faith',phonetic:'/feɪθ/',meaning:'n. 信念；信仰；信心'},
+  {word:'familiar',phonetic:'/fəˈmɪliər/',meaning:'adj. 熟悉的；常见的'},
+  {word:'fashion',phonetic:'/ˈfæʃn/',meaning:'n. 时尚；方式'},
+  {word:'feature',phonetic:'/ˈfiːtʃər/',meaning:'n. 特征；特色；v. 以…为特色'},
+  {word:'finance',phonetic:'/ˈfaɪnæns/',meaning:'n. 金融；财政；v. 资助'},
+  {word:'flexible',phonetic:'/ˈfleksəbl/',meaning:'adj. 灵活的；柔韧的'},
+  {word:'forecast',phonetic:'/ˈfɔːrkæst/',meaning:'v./n. 预测；预报'},
+  {word:'formal',phonetic:'/ˈfɔːrml/',meaning:'adj. 正式的；形式上的'},
+  {word:'former',phonetic:'/ˈfɔːrmər/',meaning:'adj. 前者的；以前的'},
+  {word:'fortunately',phonetic:'/ˈfɔːrtʃənətli/',meaning:'adv. 幸运地'},
+  {word:'foundation',phonetic:'/faʊnˈdeɪʃn/',meaning:'n. 基础；基金会'},
+  {word:'frequent',phonetic:'/ˈfriːkwənt/',meaning:'adj. 频繁的；经常的'},
+  {word:'function',phonetic:'/ˈfʌŋkʃn/',meaning:'n. 功能；函数；v. 运行'},
+  {word:'fundamental',phonetic:'/ˌfʌndəˈmentl/',meaning:'adj. 基本的；根本的'},
+  {word:'generate',phonetic:'/ˈdʒenəreɪt/',meaning:'v. 产生；生成'},
+  {word:'generous',phonetic:'/ˈdʒenərəs/',meaning:'adj. 慷慨的；大方的'},
+  {word:'genuine',phonetic:'/ˈdʒenjuɪn/',meaning:'adj. 真正的；真诚的'},
+  {word:'global',phonetic:'/ˈɡloʊbl/',meaning:'adj. 全球的；整体的'},
+  {word:'gradual',phonetic:'/ˈɡrædʒuəl/',meaning:'adj. 逐渐的；渐进的'},
+  {word:'guarantee',phonetic:'/ˌɡærənˈtiː/',meaning:'v./n. 保证；担保'},
+  {word:'hesitate',phonetic:'/ˈhezɪteɪt/',meaning:'v. 犹豫；迟疑'},
+  {word:'highlight',phonetic:'/ˈhaɪlaɪt/',meaning:'v. 强调；突出；n. 亮点'},
+  {word:'horizon',phonetic:'/həˈraɪzn/',meaning:'n. 地平线；视野'},
+  {word:'household',phonetic:'/ˈhaʊshoʊld/',meaning:'n. 家庭；adj. 家用的'},
+  {word:'identify',phonetic:'/aɪˈdentɪfaɪ/',meaning:'v. 识别；确认'},
+  {word:'ignore',phonetic:'/ɪɡˈnɔːr/',meaning:'v. 忽视；忽略'},
+  {word:'illustrate',phonetic:'/ˈɪləstreɪt/',meaning:'v. 说明；举例说明'},
+  {word:'imagination',phonetic:'/ɪˌmædʒɪˈneɪʃn/',meaning:'n. 想象力；创造力'},
+  {word:'immediate',phonetic:'/ɪˈmiːdiət/',meaning:'adj. 立即的；直接的'},
+  {word:'impact',phonetic:'/ˈɪmpækt/',meaning:'n. 影响；冲击；v. 冲击'},
+  {word:'implement',phonetic:'/ˈɪmplɪment/',meaning:'v. 实施；执行'},
+  {word:'imply',phonetic:'/ɪmˈplaɪ/',meaning:'v. 暗示；意味着'},
+  {word:'import',phonetic:'/ɪmˈpɔːrt/',meaning:'v./n. 进口；输入'},
+  {word:'impose',phonetic:'/ɪmˈpoʊz/',meaning:'v. 强加；征税'},
+  {word:'impress',phonetic:'/ɪmˈpres/',meaning:'v. 给…留下深刻印象'},
+  {word:'incident',phonetic:'/ˈɪnsɪdənt/',meaning:'n. 事件；事变'},
+  {word:'independent',phonetic:'/ˌɪndɪˈpendənt/',meaning:'adj. 独立的；自主的'},
+  {word:'indicate',phonetic:'/ˈɪndɪkeɪt/',meaning:'v. 表明；指示'},
+  {word:'individual',phonetic:'/ˌɪndɪˈvɪdʒuəl/',meaning:'n. 个人；adj. 个人的'},
+  {word:'influence',phonetic:'/ˈɪnfluəns/',meaning:'n./v. 影响；作用'},
+  {word:'inform',phonetic:'/ɪnˈfɔːrm/',meaning:'v. 通知；告知'},
+  {word:'initial',phonetic:'/ɪˈnɪʃl/',meaning:'adj. 最初的；开始的'},
+  {word:'initiative',phonetic:'/ɪˈnɪʃətɪv/',meaning:'n. 主动性；倡议'},
+  {word:'innovation',phonetic:'/ˌɪnəˈveɪʃn/',meaning:'n. 创新；革新'},
+  {word:'inspire',phonetic:'/ɪnˈspaɪər/',meaning:'v. 激励；启发'},
+  {word:'institution',phonetic:'/ˌɪnstɪˈtuːʃn/',meaning:'n. 机构；制度'},
+  {word:'instrument',phonetic:'/ˈɪnstrəmənt/',meaning:'n. 仪器；工具；乐器'},
+  {word:'insurance',phonetic:'/ɪnˈʃʊrəns/',meaning:'n. 保险；保险费'},
+  {word:'intellectual',phonetic:'/ˌɪntəˈlektʃuəl/',meaning:'adj. 智力的；n. 知识分子'},
+  {word:'intelligence',phonetic:'/ɪnˈtelɪdʒəns/',meaning:'n. 智力；情报'},
+  {word:'intense',phonetic:'/ɪnˈtens/',meaning:'adj. 强烈的；紧张的'},
+  {word:'interact',phonetic:'/ˌɪntərˈækt/',meaning:'v. 互动；相互作用'},
+  {word:'interpret',phonetic:'/ɪnˈtɜːrprɪt/',meaning:'v. 解释；口译'},
+  {word:'invest',phonetic:'/ɪnˈvest/',meaning:'v. 投资；投入'},
+  {word:'investigate',phonetic:'/ɪnˈvestɪɡeɪt/',meaning:'v. 调查；研究'},
+  {word:'involve',phonetic:'/ɪnˈvɑːlv/',meaning:'v. 涉及；包含；使卷入'},
+  {word:'isolate',phonetic:'/ˈaɪsəleɪt/',meaning:'v. 隔离；孤立'},
+  {word:'journal',phonetic:'/ˈdʒɜːrnl/',meaning:'n. 期刊；日记'},
+  {word:'justify',phonetic:'/ˈdʒʌstɪfaɪ/',meaning:'v. 证明…有理；为…辩护'},
+  {word:'knowledge',phonetic:'/ˈnɑːlɪdʒ/',meaning:'n. 知识；学问'},
+  {word:'landscape',phonetic:'/ˈlændskeɪp/',meaning:'n. 风景；景观'},
+  {word:'launch',phonetic:'/lɔːntʃ/',meaning:'v./n. 发射；启动；推出'},
+  {word:'legal',phonetic:'/ˈliːɡl/',meaning:'adj. 法律的；合法的'},
+  {word:'leisure',phonetic:'/ˈliːʒər/',meaning:'n. 闲暇；休闲'},
+  {word:'liberal',phonetic:'/ˈlɪbərəl/',meaning:'adj. 自由的；开明的'},
+  {word:'locate',phonetic:'/ˈloʊkeɪt/',meaning:'v. 定位；位于'},
+  {word:'logical',phonetic:'/ˈlɑːdʒɪkl/',meaning:'adj. 逻辑的；合理的'},
+  {word:'maintain',phonetic:'/meɪnˈteɪn/',meaning:'v. 维持；保持；维修'},
+  {word:'manufacture',phonetic:'/ˌmænjuˈfæktʃər/',meaning:'v./n. 制造；生产'},
+  {word:'measure',phonetic:'/ˈmeʒər/',meaning:'v. 测量；n. 措施；度量'},
+  {word:'mental',phonetic:'/ˈmentl/',meaning:'adj. 精神的；心理的'},
+  {word:'military',phonetic:'/ˈmɪləteri/',meaning:'adj. 军事的；n. 军队'},
+  {word:'minority',phonetic:'/maɪˈnɔːrəti/',meaning:'n. 少数；少数民族'},
+  {word:'mission',phonetic:'/ˈmɪʃn/',meaning:'n. 使命；任务'},
+  {word:'modify',phonetic:'/ˈmɑːdɪfaɪ/',meaning:'v. 修改；调整'},
+  {word:'monitor',phonetic:'/ˈmɑːnɪtər/',meaning:'v. 监控；n. 显示器'},
+  {word:'motivate',phonetic:'/ˈmoʊtɪveɪt/',meaning:'v. 激励；激发'},
+  {word:'negotiate',phonetic:'/nɪˈɡoʊʃieɪt/',meaning:'v. 谈判；协商'},
+  {word:'network',phonetic:'/ˈnetwɜːrk/',meaning:'n. 网络；人际关系网'},
+  {word:'objective',phonetic:'/əbˈdʒektɪv/',meaning:'n. 目标；adj. 客观的'},
+  {word:'obtain',phonetic:'/əbˈteɪn/',meaning:'v. 获得；得到'},
+  {word:'obvious',phonetic:'/ˈɑːbviəs/',meaning:'adj. 明显的；显然的'},
+  {word:'occasion',phonetic:'/əˈkeɪʒn/',meaning:'n. 场合；时机'},
+  {word:'occupy',phonetic:'/ˈɑːkjupaɪ/',meaning:'v. 占据；占用'},
+  {word:'offense',phonetic:'/əˈfens/',meaning:'n. 冒犯；进攻'},
+  {word:'operate',phonetic:'/ˈɑːpəreɪt/',meaning:'v. 操作；运转；手术'},
+  {word:'opportunity',phonetic:'/ˌɑːpərˈtuːnəti/',meaning:'n. 机会；时机'},
+  {word:'oppose',phonetic:'/əˈpoʊz/',meaning:'v. 反对；对抗'},
+  {word:'organize',phonetic:'/ˈɔːrɡənaɪz/',meaning:'v. 组织；安排'},
+  {word:'original',phonetic:'/əˈrɪdʒənl/',meaning:'adj. 原始的；创新的；n. 原作'},
+  {word:'overcome',phonetic:'/ˌoʊvərˈkʌm/',meaning:'v. 克服；战胜'},
+  {word:'participate',phonetic:'/pɑːrˈtɪsɪpeɪt/',meaning:'v. 参与；参加'},
+  {word:'passion',phonetic:'/ˈpæʃn/',meaning:'n. 激情；热情'},
+  {word:'patience',phonetic:'/ˈpeɪʃns/',meaning:'n. 耐心；忍耐'},
+  {word:'perceive',phonetic:'/pərˈsiːv/',meaning:'v. 察觉；感知；理解'},
+  {word:'perform',phonetic:'/pərˈfɔːrm/',meaning:'v. 表演；执行；表现'},
+  {word:'permanent',phonetic:'/ˈpɜːrmənənt/',meaning:'adj. 永久的；长期的'},
+  {word:'permit',phonetic:'/pərˈmɪt/',meaning:'v. 允许；许可；n. 许可证'},
+  {word:'perspective',phonetic:'/pərˈspektɪv/',meaning:'n. 观点；视角；透视'},
+  {word:'phenomenon',phonetic:'/fɪˈnɑːmɪnən/',meaning:'n. 现象；奇迹'},
+  {word:'philosophy',phonetic:'/fɪˈlɑːsəfi/',meaning:'n. 哲学；人生哲学'},
+  {word:'policy',phonetic:'/ˈpɑːləsi/',meaning:'n. 政策；方针；保险单'},
+  {word:'pollution',phonetic:'/pəˈluːʃn/',meaning:'n. 污染；污染物'},
+  {word:'population',phonetic:'/ˌpɑːpjuˈleɪʃn/',meaning:'n. 人口；种群'},
+  {word:'portion',phonetic:'/ˈpɔːrʃn/',meaning:'n. 一部分；一份'},
+  {word:'possess',phonetic:'/pəˈzes/',meaning:'v. 拥有；具有'},
+  {word:'potential',phonetic:'/pəˈtenʃl/',meaning:'adj. 潜在的；n. 潜力'},
+  {word:'poverty',phonetic:'/ˈpɑːvərti/',meaning:'n. 贫困；贫穷'},
+  {word:'practical',phonetic:'/ˈpræktɪkl/',meaning:'adj. 实际的；实用的'},
+  {word:'predict',phonetic:'/prɪˈdɪkt/',meaning:'v. 预测；预言'},
+  {word:'prefer',phonetic:'/prɪˈfɜːr/',meaning:'v. 更喜欢；偏好'},
+  {word:'preserve',phonetic:'/prɪˈzɜːrv/',meaning:'v. 保护；保存；保鲜'},
+  {word:'pressure',phonetic:'/ˈpreʃər/',meaning:'n. 压力；压迫'},
+  {word:'previous',phonetic:'/ˈpriːviəs/',meaning:'adj. 先前的；以前的'},
+  {word:'principle',phonetic:'/ˈprɪnsəpl/',meaning:'n. 原则；原理'},
+  {word:'priority',phonetic:'/praɪˈɔːrəti/',meaning:'n. 优先；优先事项'},
+  {word:'procedure',phonetic:'/prəˈsiːdʒər/',meaning:'n. 程序；步骤'},
+  {word:'process',phonetic:'/ˈprɑːses/',meaning:'n. 过程；v. 处理'},
+  {word:'professional',phonetic:'/prəˈfeʃənl/',meaning:'adj. 专业的；n. 专业人士'},
+  {word:'profit',phonetic:'/ˈprɑːfɪt/',meaning:'n. 利润；v. 获利'},
+  {word:'progress',phonetic:'/ˈprɑːɡres/',meaning:'n./v. 进步；进展'},
+  {word:'promote',phonetic:'/prəˈmoʊt/',meaning:'v. 促进；提升；推广'},
+  {word:'propose',phonetic:'/prəˈpoʊz/',meaning:'v. 提议；建议；求婚'},
+  {word:'prospect',phonetic:'/ˈprɑːspekt/',meaning:'n. 前景；展望'},
+  {word:'protest',phonetic:'/prəˈtest/',meaning:'v./n. 抗议；反对'},
+  {word:'publish',phonetic:'/ˈpʌblɪʃ/',meaning:'v. 出版；发布'},
+  {word:'purchase',phonetic:'/ˈpɜːrtʃəs/',meaning:'v./n. 购买；采购'},
+  {word:'pursue',phonetic:'/pərˈsuː/',meaning:'v. 追求；追赶'},
+  {word:'quality',phonetic:'/ˈkwɑːləti/',meaning:'n. 质量；品质；adj. 优质的'},
+  {word:'quantity',phonetic:'/ˈkwɑːntəti/',meaning:'n. 数量；大量'},
+  {word:'range',phonetic:'/reɪndʒ/',meaning:'n. 范围；幅度；v. 变化'},
+  {word:'rapid',phonetic:'/ˈræpɪd/',meaning:'adj. 迅速的；快速的'},
+  {word:'reality',phonetic:'/riˈæləti/',meaning:'n. 现实；实际'},
+  {word:'reasonable',phonetic:'/ˈriːznəbl/',meaning:'adj. 合理的；公道的'},
+  {word:'recognize',phonetic:'/ˈrekəɡnaɪz/',meaning:'v. 认出；承认；认可'},
+  {word:'recommend',phonetic:'/ˌrekəˈmend/',meaning:'v. 推荐；建议'},
+  {word:'recover',phonetic:'/rɪˈkʌvər/',meaning:'v. 恢复；康复；找回'},
+  {word:'reduce',phonetic:'/rɪˈduːs/',meaning:'v. 减少；降低'},
+  {word:'reflect',phonetic:'/rɪˈflekt/',meaning:'v. 反映；反射；反思'},
+  {word:'reform',phonetic:'/rɪˈfɔːrm/',meaning:'v./n. 改革；改造'},
+  {word:'regard',phonetic:'/rɪˈɡɑːrd/',meaning:'v. 看待；认为；n. 尊重'},
+  {word:'register',phonetic:'/ˈredʒɪstər/',meaning:'v./n. 注册；登记'},
+  {word:'regulate',phonetic:'/ˈreɡjuleɪt/',meaning:'v. 调节；管理；控制'},
+  {word:'reject',phonetic:'/rɪˈdʒekt/',meaning:'v. 拒绝；排斥；n. 废品'},
+  {word:'relate',phonetic:'/rɪˈleɪt/',meaning:'v. 联系；关联；叙述'},
+  {word:'release',phonetic:'/rɪˈliːs/',meaning:'v./n. 释放；发布；发行'},
+  {word:'relevant',phonetic:'/ˈreləvənt/',meaning:'adj. 相关的；切题的'},
+  {word:'relief',phonetic:'/rɪˈliːf/',meaning:'n. 减轻；缓解；救济'},
+  {word:'rely',phonetic:'/rɪˈlaɪ/',meaning:'v. 依赖；依靠'},
+  {word:'remain',phonetic:'/rɪˈmeɪn/',meaning:'v. 保持；剩余；逗留'},
+  {word:'remark',phonetic:'/rɪˈmɑːrk/',meaning:'n./v. 评论；注意'},
+  {word:'remedy',phonetic:'/ˈremədi/',meaning:'n. 补救方法；疗法'},
+  {word:'remove',phonetic:'/rɪˈmuːv/',meaning:'v. 移除；去除'},
+  {word:'replace',phonetic:'/rɪˈpleɪs/',meaning:'v. 替换；取代'},
+  {word:'represent',phonetic:'/ˌreprɪˈzent/',meaning:'v. 代表；表示；描绘'},
+  {word:'reputation',phonetic:'/ˌrepjuˈteɪʃn/',meaning:'n. 名声；声誉'},
+  {word:'request',phonetic:'/rɪˈkwest/',meaning:'n./v. 请求；要求'},
+  {word:'require',phonetic:'/rɪˈkwaɪər/',meaning:'v. 需要；要求'},
+  {word:'research',phonetic:'/rɪˈsɜːrtʃ/',meaning:'n./v. 研究；调查'},
+  {word:'reserve',phonetic:'/rɪˈzɜːrv/',meaning:'v. 预订；保留；n. 储备'},
+  {word:'resign',phonetic:'/rɪˈzaɪn/',meaning:'v. 辞职；放弃'},
+  {word:'resist',phonetic:'/rɪˈzɪst/',meaning:'v. 抵抗；抵制；忍耐'},
+  {word:'resolve',phonetic:'/rɪˈzɑːlv/',meaning:'v. 解决；决心；n. 决心'},
+  {word:'resource',phonetic:'/ˈriːsɔːrs/',meaning:'n. 资源；财力'},
+  {word:'respond',phonetic:'/rɪˈspɑːnd/',meaning:'v. 回应；响应'},
+  {word:'responsible',phonetic:'/rɪˈspɑːnsəbl/',meaning:'adj. 负责的；有责任的'},
+  {word:'restore',phonetic:'/rɪˈstɔːr/',meaning:'v. 恢复；修复；归还'},
+  {word:'restrict',phonetic:'/rɪˈstrɪkt/',meaning:'v. 限制；约束'},
+  {word:'reveal',phonetic:'/rɪˈviːl/',meaning:'v. 揭示；暴露'},
+  {word:'revenue',phonetic:'/ˈrevənuː/',meaning:'n. 收入；税收'},
+  {word:'revolution',phonetic:'/ˌrevəˈluːʃn/',meaning:'n. 革命；变革'},
+  {word:'risk',phonetic:'/rɪsk/',meaning:'n. 风险；v. 冒…的风险'},
+  {word:'route',phonetic:'/ruːt/',meaning:'n. 路线；航线'},
+  {word:'rural',phonetic:'/ˈrʊrəl/',meaning:'adj. 农村的；乡村的'},
+  {word:'salary',phonetic:'/ˈsæləri/',meaning:'n. 薪水；工资'},
+  {word:'satellite',phonetic:'/ˈsætəlaɪt/',meaning:'n. 卫星；人造卫星'},
+  {word:'satisfy',phonetic:'/ˈsætɪsfaɪ/',meaning:'v. 满足；使满意'},
+  {word:'schedule',phonetic:'/ˈskedʒuːl/',meaning:'n. 时间表；日程；v. 安排'},
+  {word:'scheme',phonetic:'/skiːm/',meaning:'n. 计划；方案；阴谋'},
+  {word:'security',phonetic:'/sɪˈkjʊrəti/',meaning:'n. 安全；保安；证券'},
+  {word:'senior',phonetic:'/ˈsiːniər/',meaning:'adj. 高级的；年长的；n. 大四学生'},
+  {word:'separate',phonetic:'/ˈsepəreɪt/',meaning:'v. 分离；分开；adj. 分开的'},
+  {word:'series',phonetic:'/ˈsɪriːz/',meaning:'n. 系列；连续'},
+  {word:'severe',phonetic:'/sɪˈvɪr/',meaning:'adj. 严重的；严厉的'},
+  {word:'shelter',phonetic:'/ˈʃeltər/',meaning:'n. 庇护所；v. 庇护'},
+  {word:'signal',phonetic:'/ˈsɪɡnəl/',meaning:'n. 信号；v. 发信号'},
+  {word:'significant',phonetic:'/sɪɡˈnɪfɪkənt/',meaning:'adj. 重要的；显著的'},
+  {word:'similar',phonetic:'/ˈsɪmələr/',meaning:'adj. 相似的；类似的'},
+  {word:'situation',phonetic:'/ˌsɪtʃuˈeɪʃn/',meaning:'n. 情况；形势'},
+  {word:'solution',phonetic:'/səˈluːʃn/',meaning:'n. 解决方案；溶液'},
+  {word:'species',phonetic:'/ˈspiːʃiːz/',meaning:'n. 物种；种类'},
+  {word:'specific',phonetic:'/spəˈsɪfɪk/',meaning:'adj. 具体的；特定的'},
+  {word:'stable',phonetic:'/ˈsteɪbl/',meaning:'adj. 稳定的；牢固的'},
+  {word:'standard',phonetic:'/ˈstændərd/',meaning:'n. 标准；adj. 标准的'},
+  {word:'status',phonetic:'/ˈsteɪtəs/',meaning:'n. 地位；状态'},
+  {word:'strategy',phonetic:'/ˈstrætədʒi/',meaning:'n. 策略；战略'},
+  {word:'strength',phonetic:'/streŋθ/',meaning:'n. 力量；优势；强度'},
+  {word:'structure',phonetic:'/ˈstrʌktʃər/',meaning:'n. 结构；构造'},
+  {word:'struggle',phonetic:'/ˈstrʌɡl/',meaning:'v./n. 奋斗；挣扎'},
+  {word:'substance',phonetic:'/ˈsʌbstəns/',meaning:'n. 物质；实质'},
+  {word:'sufficient',phonetic:'/səˈfɪʃnt/',meaning:'adj. 足够的；充分的'},
+  {word:'suggest',phonetic:'/səˈdʒest/',meaning:'v. 建议；暗示'},
+  {word:'summarize',phonetic:'/ˈsʌməraɪz/',meaning:'v. 总结；概括'},
+  {word:'supply',phonetic:'/səˈplaɪ/',meaning:'v./n. 供应；供给'},
+  {word:'support',phonetic:'/səˈpɔːrt/',meaning:'v./n. 支持；支撑'},
+  {word:'surround',phonetic:'/səˈraʊnd/',meaning:'v. 围绕；包围'},
+  {word:'survive',phonetic:'/sərˈvaɪv/',meaning:'v. 幸存；生存'},
+  {word:'suspect',phonetic:'/səˈspekt/',meaning:'v. 怀疑；n. 嫌疑人'},
+  {word:'symbol',phonetic:'/ˈsɪmbl/',meaning:'n. 象征；符号'},
+  {word:'sympathy',phonetic:'/ˈsɪmpəθi/',meaning:'n. 同情；赞同'},
+  {word:'target',phonetic:'/ˈtɑːrɡɪt/',meaning:'n. 目标；靶子；v. 针对'},
+  {word:'technique',phonetic:'/tekˈniːk/',meaning:'n. 技术；技巧'},
+  {word:'technology',phonetic:'/tekˈnɑːlədʒi/',meaning:'n. 技术；科技'},
+  {word:'temporary',phonetic:'/ˈtempəreri/',meaning:'adj. 临时的；暂时的'},
+  {word:'tendency',phonetic:'/ˈtendənsi/',meaning:'n. 趋势；倾向'},
+  {word:'tension',phonetic:'/ˈtenʃn/',meaning:'n. 紧张；张力'},
+  {word:'territory',phonetic:'/ˈterətɔːri/',meaning:'n. 领土；领域'},
+  {word:'threaten',phonetic:'/ˈθretn/',meaning:'v. 威胁；恐吓'},
+  {word:'tolerate',phonetic:'/ˈtɑːləreɪt/',meaning:'v. 容忍；忍受'},
+  {word:'tradition',phonetic:'/trəˈdɪʃn/',meaning:'n. 传统；惯例'},
+  {word:'transfer',phonetic:'/trænsˈfɜːr/',meaning:'v./n. 转移；调动；转账'},
+  {word:'transform',phonetic:'/trænsˈfɔːrm/',meaning:'v. 改变；转变'},
+  {word:'treat',phonetic:'/triːt/',meaning:'v. 对待；治疗；款待'},
+  {word:'trend',phonetic:'/trend/',meaning:'n. 趋势；潮流'},
+  {word:'typical',phonetic:'/ˈtɪpɪkl/',meaning:'adj. 典型的；特有的'},
+  {word:'ultimate',phonetic:'/ˈʌltɪmət/',meaning:'adj. 最终的；根本的'},
+  {word:'undergo',phonetic:'/ˌʌndərˈɡoʊ/',meaning:'v. 经历；遭受'},
+  {word:'unique',phonetic:'/juˈniːk/',meaning:'adj. 独特的；唯一的'},
+  {word:'universal',phonetic:'/ˌjuːnɪˈvɜːrsl/',meaning:'adj. 普遍的；通用的'},
+  {word:'urban',phonetic:'/ˈɜːrbən/',meaning:'adj. 城市的；都市的'},
+  {word:'urge',phonetic:'/ɜːrdʒ/',meaning:'v. 催促；强烈要求；n. 冲动'},
+  {word:'various',phonetic:'/ˈveriəs/',meaning:'adj. 各种各样的'},
+  {word:'version',phonetic:'/ˈvɜːrʒn/',meaning:'n. 版本；说法'},
+  {word:'victim',phonetic:'/ˈvɪktɪm/',meaning:'n. 受害者；牺牲品'},
+  {word:'violence',phonetic:'/ˈvaɪələns/',meaning:'n. 暴力；暴行'},
+  {word:'visible',phonetic:'/ˈvɪzəbl/',meaning:'adj. 可见的；明显的'},
+  {word:'vision',phonetic:'/ˈvɪʒn/',meaning:'n. 视力；远见；愿景'},
+  {word:'volume',phonetic:'/ˈvɑːljuːm/',meaning:'n. 体积；音量；卷'},
+  {word:'voluntary',phonetic:'/ˈvɑːlənteri/',meaning:'adj. 自愿的；志愿的'},
+  {word:'welfare',phonetic:'/ˈwelfer/',meaning:'n. 福利；幸福'},
+  {word:'widespread',phonetic:'/ˈwaɪdspred/',meaning:'adj. 广泛的；普遍的'},
+  {word:'witness',phonetic:'/ˈwɪtnəs/',meaning:'n. 目击者；证人；v. 目击'},
+  {word:'worthwhile',phonetic:'/ˌwɜːrθˈwaɪl/',meaning:'adj. 值得的；有价值的'},
+  {word:'yield',phonetic:'/jiːld/',meaning:'v. 产出；屈服；n. 产量'},
+];
+
+// 2027 中级会计 — 3 subjects with chapter lists
+const ACCOUNTING_SUBJECTS = [
+  {id:'practice',name:'中级会计实务',icon:'📗',chapters:[
+    '总论','存货','固定资产','无形资产','投资性房地产',
+    '长期股权投资','资产减值','金融资产和金融负债','职工薪酬',
+    '借款费用','或有事项','收入','政府补助','非货币性资产交换',
+    '债务重组','所得税','外币折算','租赁','持有待售的非流动资产',
+    '企业合并','财务报告','会计政策、会计估计变更和差错更正',
+    '资产负债表日后事项','公允价值计量'
+  ]},
+  {id:'finance_mgmt',name:'财务管理',icon:'📊',chapters:[
+    '总论','财务管理基础','预算管理','筹资管理（上）','筹资管理（下）',
+    '投资管理','营运资金管理','成本管理','收入与分配管理','财务分析与评价'
+  ]},
+  {id:'law',name:'经济法',icon:'📙',chapters:[
+    '总论','公司法律制度','合伙企业法律制度','物权法律制度',
+    '合同法律制度','金融法律制度','财政法律制度','知识产权法律制度'
+  ]},
+];
+
+// 辅助学习资料
+const ACCOUNTING_REFERENCES = {
+  practice: {title:'📋 会计分录速查',items:[
+    {label:'存货采购',content:'借：原材料/库存商品\n　　应交税费—应交增值税（进项税额）\n　贷：银行存款/应付账款'},
+    {label:'存货发出（先进先出/加权平均）',content:'借：生产成本/管理费用/销售费用\n　贷：原材料/库存商品'},
+    {label:'存货跌价准备',content:'借：资产减值损失\n　贷：存货跌价准备\n（可变现净值＜成本时计提）'},
+    {label:'外购固定资产',content:'借：固定资产/在建工程\n　　应交税费—应交增值税（进项税额）\n　贷：银行存款/应付账款'},
+    {label:'固定资产折旧（年限平均法）',content:'借：制造费用/管理费用/销售费用\n　贷：累计折旧\n年折旧额=(原值-残值)/使用年限'},
+    {label:'固定资产处置',content:'①转入清理：\n借：固定资产清理\n　　累计折旧\n　贷：固定资产\n②发生清理费：\n借：固定资产清理\n　贷：银行存款\n③收到价款：\n借：银行存款\n　贷：固定资产清理\n④结转净损益→资产处置损益'},
+    {label:'无形资产购入',content:'借：无形资产\n　　应交税费—应交增值税（进项税额）\n　贷：银行存款'},
+    {label:'无形资产摊销',content:'借：管理费用/制造费用\n　贷：累计摊销\n（使用寿命有限才摊销，残值一般为零）'},
+    {label:'投资性房地产—成本模式',content:'购入：借：投资性房地产\n　　　贷：银行存款\n折旧：借：其他业务成本\n　　　贷：投资性房地产累计折旧\n减值：借：资产减值损失\n　　　贷：投资性房地产减值准备'},
+    {label:'投资性房地产—公允价值模式',content:'购入同成本模式\n公允价值上升：\n借：投资性房地产—公允价值变动\n　贷：公允价值变动损益\n（不提折旧，不减值）'},
+    {label:'长期股权投资—成本法（>50%）',content:'取得：借：长期股权投资\n　　　贷：银行存款\n被投资方宣告分红：\n借：应收股利\n　贷：投资收益\n（除减值外不调整账面）'},
+    {label:'长期股权投资—权益法（20%~50%）',content:'取得：借：长期股权投资—投资成本\n　　　贷：银行存款\n被投资方实现净利润：\n借：长期股权投资—损益调整\n　贷：投资收益\n被投资方宣告分红：\n借：应收股利\n　贷：长期股权投资—损益调整'},
+    {label:'收入五步法（新收入准则）',content:'①识别与客户订立的合同\n②识别合同中的单项履约义务\n③确定交易价格\n④将交易价格分摊至各单项履约义务\n⑤在企业履行履约义务时（或过程中）确认收入'},
+    {label:'所得税—账面价值vs计税基础',content:'应纳税暂时性差异→递延所得税负债\n可抵扣暂时性差异→递延所得税资产\n借：所得税费用\n　　递延所得税资产（可抵扣）\n　贷：应交税费—应交所得税\n　　　　递延所得税负债（应纳税）'},
+    {label:'债务重组—债权人',content:'借：库存商品/固定资产（放弃债权公允价值）\n　　坏账准备\n　　投资收益（借方差额）\n　贷：应收账款\n　　　投资收益（贷方差额）'},
+    {label:'合并报表抵销分录（核心）',content:'①母公司长投与子公司所有者权益抵销\n借：实收资本/资本公积/盈余公积/未分配利润\n　　商誉（差额）\n　贷：长期股权投资\n　　　　少数股东权益\n②母公司投资收益与子公司利润分配抵销\n借：投资收益\n　　少数股东损益\n　　年初未分配利润\n　贷：提取盈余公积\n　　　　向股东分配利润\n　　　　年末未分配利润'},
+  ]},
+  finance_mgmt: {title:'📐 公式速查',items:[
+    {label:'复利终值',content:'F = P × (1 + i)^n\nF：终值　P：现值　i：利率　n：期数'},
+    {label:'复利现值',content:'P = F / (1 + i)^n = F × (P/F, i, n)'},
+    {label:'普通年金终值',content:'F = A × [(1+i)^n − 1] / i\nA：每期等额收付金额'},
+    {label:'普通年金现值',content:'P = A × [1 − (1+i)^(−n)] / i'},
+    {label:'预付年金终值',content:'F = A × [(1+i)^n − 1] / i × (1+i)\n= 普通年金终值 × (1+i)'},
+    {label:'预付年金现值',content:'P = A × [1 − (1+i)^(−n)] / i × (1+i)\n= 普通年金现值 × (1+i)'},
+    {label:'永续年金现值',content:'P = A / i'},
+    {label:'实际利率',content:'i = (1 + r/m)^m − 1\nr：名义利率　m：每年复利次数'},
+    {label:'资本资产定价模型（CAPM）',content:'R = Rf + β × (Rm − Rf)\nRf：无风险利率　Rm：市场平均收益率\nβ：系统风险系数'},
+    {label:'债券内在价值',content:'V = I × (P/A, i, n) + M × (P/F, i, n)\nI：每期利息　M：面值'},
+    {label:'股票内在价值（固定增长）',content:'P₀ = D₁ / (Rs − g)\nD₁：预期下一期股利　Rs：必要收益率　g：固定增长率'},
+    {label:'净现值（NPV）',content:'NPV = Σ NCFₜ/(1+i)^t − 初始投资额\nNPV＞0 → 可行'},
+    {label:'内含报酬率（IRR）',content:'使 NPV=0 的折现率\nNPV = Σ NCFₜ/(1+IRR)^t − C₀ = 0'},
+    {label:'流动比率',content:'流动比率 = 流动资产 / 流动负债\n（衡量短期偿债能力，>2较安全）'},
+    {label:'速动比率',content:'速动比率 = (流动资产−存货) / 流动负债\n（>1较安全）'},
+    {label:'资产负债率',content:'资产负债率 = 负债总额 / 资产总额 × 100%\n（反映财务杠杆水平）'},
+    {label:'存货周转率',content:'存货周转次数 = 营业成本 / 平均存货\n周转天数 = 360 / 周转次数'},
+    {label:'应收账款周转率',content:'应收账款周转次数 = 营业收入 / 平均应收账款\n周转天数 = 360 / 周转次数'},
+    {label:'总资产周转率',content:'总资产周转率 = 营业收入 / 平均总资产'},
+    {label:'营业净利率',content:'营业净利率 = 净利润 / 营业收入 × 100%'},
+    {label:'净资产收益率（ROE）',content:'ROE = 净利润 / 平均净资产 × 100%\n= 营业净利率 × 总资产周转率 × 权益乘数（杜邦分析）'},
+    {label:'总资产报酬率（ROA）',content:'ROA = 息税前利润(EBIT) / 平均总资产 × 100%'},
+    {label:'每股收益（EPS）',content:'基本EPS = (净利润−优先股股利) / 流通在外普通股加权平均数'},
+    {label:'市盈率（P/E）',content:'市盈率 = 每股市价 / 每股收益'},
+    {label:'经营杠杆（DOL）',content:'DOL = (ΔEBIT/EBIT) / (ΔQ/Q)\n　 = (EBIT+F) / EBIT\nF：固定成本'},
+    {label:'财务杠杆（DFL）',content:'DFL = (ΔEPS/EPS) / (ΔEBIT/EBIT)\n　 = EBIT / (EBIT − I)\nI：利息费用'},
+    {label:'总杠杆（DTL）',content:'DTL = DOL × DFL\n　　= (EBIT+F) / (EBIT−I)'},
+    {label:'经济订货批量（EOQ）',content:'EOQ = √(2KD / Kc)\nK：每次订货成本　D：年需求量\nKc：单位储存成本'},
+    {label:'最佳现金持有量（存货模式）',content:'C* = √(2TF / K)\nT：一定期间现金总需求量\nF：每次转换成本　K：机会成本率'},
+    {label:'盈亏平衡点',content:'盈亏平衡销量 = 固定成本 / (单价−单位变动成本)\n　　　　　　 = F / (P−V)'},
+    {label:'安全边际',content:'安全边际额 = 实际销售额 − 盈亏平衡销售额\n安全边际率 = 安全边际额 / 实际销售额'},
+    {label:'加权平均资本成本（WACC）',content:'WACC = E/V × Re + D/V × Rd × (1−T)\nE：权益市值　D：债务市值　V=E+D\nRe：权益成本　Rd：债务成本　T：所得税率'},
+  ]},
+  law: {title:'⚖️ 法条速记',items:[
+    {label:'有限责任公司—注册资本',content:'全体股东认缴的出资额，无最低限额（法律另有规定除外）。股东以其认缴出资额为限对公司承担责任。'},
+    {label:'有限责任公司—组织机构',content:'① 股东会：最高权力机构，每年至少一次\n② 董事会：3-13人，小公司可设1名执行董事\n③ 监事会：≥3人，小公司可设1-2名监事'},
+    {label:'股份有限公司—设立条件',content:'① 发起人符合法定人数（2-200人）\n② 注册资本为认购股本总额（无最低限额）\n③ 股份发行、筹办事项符合法律规定'},
+    {label:'公司债券发行条件',content:'① 股份有限公司净资产≥3000万\n　 有限责任公司净资产≥6000万\n② 累计债券余额≤净资产40%\n③ 近3年年均可分配利润≥债券1年利息'},
+    {label:'普通合伙企业—责任承担',content:'合伙人对合伙企业债务承担无限连带责任。新入伙合伙人对入伙前债务也承担无限连带责任。退伙合伙人对退伙前债务仍承担无限连带责任。'},
+    {label:'有限合伙企业—特殊规定',content:'至少1名普通合伙人（承担无限连带责任）+ 至少1名有限合伙人（以认缴出资额为限承担责任）。有限合伙人不得执行合伙事务。'},
+    {label:'物权—善意取得',content:'三个条件：\n① 受让人受让时为善意\n② 以合理价格转让\n③ 转让的不动产/动产已完成登记/交付\n（遗失物、盗赃物不适用善意取得）'},
+    {label:'抵押权—清偿顺序',content:'同一财产向两个以上债权人抵押：\n① 已登记的按登记先后顺序\n② 已登记的优先于未登记的\n③ 均未登记的按债权比例清偿'},
+    {label:'合同—要约与承诺',content:'要约：内容具体确定+表明经受要约人承诺即受约束\n要约邀请：希望他人向自己发出要约（如商业广告）\n承诺：受要约人同意要约的意思表示，到达生效'},
+    {label:'合同—违约责任',content:'① 继续履行\n② 采取补救措施（修理、更换、重作、退货、减价）\n③ 赔偿损失（实际损失+可得利益，不超过可预见范围）\n④ 违约金（与实际损失相比可请求增减）\n⑤ 定金罚则（给付方违约无权要求返还，收受方违约双倍返还）'},
+    {label:'合同—无效vs可撤销',content:'无效：欺诈胁迫损害国家利益、恶意串通、以合法形式掩盖非法目的、损害公共利益、违反强制性规定\n可撤销：重大误解、显失公平、欺诈、胁迫（不损害国家利益时）、乘人之危'},
+    {label:'票据—汇票的出票',content:'绝对必要记载事项（缺一无效）：\n①"汇票"字样　②无条件支付委托\n③确定的金额　④付款人名称\n⑤收款人名称　⑥出票日期\n⑦出票人签章'},
+    {label:'票据—背书',content:'背书连续：转让汇票的背书人与受让汇票的被背书人在汇票上的签章依次前后衔接。背书不得附条件，附条件不具有汇票上的效力。'},
+    {label:'票据—追索权',content:'到期被拒绝付款→持票人可向背书人、出票人及其他债务人行使追索权。追索金额=票据金额+利息+取得拒绝证明及发出通知的费用。'},
+    {label:'企业所得税—税率',content:'基本税率：25%\n高新技术企业：15%\n小型微利企业：20%\n（应纳税所得额=收入总额−不征税收入−免税收入−各项扣除−以前年度亏损）'},
+    {label:'企业所得税—不得扣除项目',content:'①向投资者支付的股息红利\n②企业所得税税款\n③税收滞纳金\n④罚款罚金和被没收财物损失\n⑤超标准的捐赠支出\n⑥赞助支出\n⑦未经核准的准备金支出'},
+    {label:'增值税—一般纳税人vs小规模',content:'一般纳税人：销项税额−进项税额，基本税率13%/9%/6%\n小规模纳税人：销售额×征收率3%\n年应税销售额>500万→一般纳税人'},
+    {label:'专利法—三种专利',content:'发明：保护期20年（实质性审查）\n实用新型：保护期10年（形式审查）\n外观设计：保护期15年（形式审查）\n均自申请日起算，保护期内需缴纳年费'},
+    {label:'商标法—注册原则',content:'申请在先原则（同日申请→使用在先）\n保护期10年，期满可续展（每次10年，无限续展）\n连续3年不使用→可被申请撤销'},
+  ]},
+};
+
+// --- 7. English ---
+function renderEnglish() {
+  const el = document.getElementById('mod-english');
+  const todayLearned = app.englishWords.filter(w=>w.date===today()).length;
+  const totalLearned = app.englishWords.length;
+  const toReview = app.englishWords.filter(w=>w.date!==today()).length;
+
+  // Week bar chart
+  const weekDays = getWeekDays();
+  const weekCounts = weekDays.map(d=>app.englishWords.filter(w=>w.date===d).length);
+
+  // Get a random word for flashcard
+  const reviewWords = app.englishWords.filter(w=>w.date!==today());
+  const flashWord = reviewWords.length > 0 ? reviewWords[Math.floor(Math.random()*reviewWords.length)] : null;
+
+  el.innerHTML = `
+    <div class="module-header">📝 英语学习</div>
+    <div class="stats-row">
+      <div class="stat-card purple"><div class="stat-value">${totalLearned}</div><div class="stat-label">累计单词</div></div>
+      <div class="stat-card cyan"><div class="stat-value">${todayLearned}</div><div class="stat-label">今日学习</div></div>
+      <div class="stat-card orange"><div class="stat-value">${toReview}</div><div class="stat-label">待复习</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card" style="text-align:center">
+        <div class="card-title">🃏 单词卡片</div>
+        ${flashWord ? `
+        <div class="flashcard" id="flashcard" onclick="document.getElementById('flashcard').classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">${escHtml(flashWord.word)}${flashWord.phonetic?`<div style="font-size:14px;color:var(--text-secondary);margin-top:4px">${escHtml(flashWord.phonetic)}</div>`:""}<div class="flashcard-hint">点击翻转查看释义</div></div>
+            <div class="flashcard-back"><div style="font-size:18px;font-weight:600;margin-bottom:6px">${escHtml(flashWord.meaning)}</div>${flashWord.phonetic?`<div style="font-size:14px;opacity:.85;margin-bottom:4px">${escHtml(flashWord.phonetic)}</div>`:""}<div style="font-size:11px;opacity:.7">再次点击翻回</div></div>
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn btn-sm btn-secondary" onclick="markReviewed(${flashWord.id})">✅ 已复习</button>
+          <button class="btn btn-sm btn-outline" onclick="renderEnglish()">🔄 下一个</button>
+        </div>
+        ` : '<div style="padding:40px;color:var(--text-secondary)">暂无单词，快去添加吧！</div>'}
+      </div>
+      <div class="card">
+        <div class="card-title">📈 本周学习统计</div>
+        <div class="chart-wrap"><canvas id="englishWeekChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">➕ 添加单词</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="engWord" placeholder="英文单词" style="flex:1;min-width:100px" onkeydown="if(event.key==='Enter')document.getElementById('engPhonetic').focus()">
+        <input type="text" id="engPhonetic" placeholder="音标(可选)" style="width:110px" onkeydown="if(event.key==='Enter')document.getElementById('engMeaning').focus()">
+        <input type="text" id="engMeaning" placeholder="中文释义" style="flex:1;min-width:100px" onkeydown="if(event.key==='Enter')addWord()">
+        <button class="btn btn-primary" onclick="addWord()">添加</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <span style="font-size:13px">每日目标：</span>
+        <input type="number" id="engGoal" value="${app.englishGoal}" style="width:70px" min="1" max="100">
+        <span style="font-size:13px;color:var(--text-secondary)">个单词</span>
+        <button class="btn btn-sm btn-secondary" onclick="updateEngGoal()">设置</button>
+        <button class="btn btn-sm btn-secondary" onclick="importCET4()" style="margin-left:auto">📥 导入四级词汇</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 单词列表</div>
+      <div style="max-height:300px;overflow-y:auto">${renderWordList()}</div>
+    </div>
+  `;
+  setTimeout(()=>renderEnglishChart(weekDays, weekCounts), 100);
+}
+
+function renderWordList() {
+  if (!app.englishWords.length) return '<div style="color:var(--text-secondary);font-size:13px;padding:8px">暂无单词，点击下方"导入四级词汇"快速添加！</div>';
+  return app.englishWords.sort((a,b)=>b.id-a.id).slice(0,50).map(w=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="font-weight:600;width:100px">${escHtml(w.word)}</span>
+      <span style="width:100px;color:var(--text-tertiary);font-size:11px">${escHtml(w.phonetic||'')}</span>
+      <span style="flex:1;color:var(--text-secondary)">${escHtml(w.meaning)}</span>
+      <span style="color:var(--text-tertiary);font-size:11px">${w.date}</span>
+      <button class="btn btn-xs btn-outline" onclick="deleteWord(${w.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addWord() {
+  const word = document.getElementById('engWord').value.trim();
+  const phonetic = document.getElementById('engPhonetic').value.trim();
+  const meaning = document.getElementById('engMeaning').value.trim();
+  if (!word || !meaning) { toast('⚠️ 请填写单词和释义'); return; }
+  app.englishWords.push({id:Date.now(), word, phonetic, meaning, date:today()});
+  persist(); renderEnglish(); toast('📝 单词已添加');
+  document.getElementById('engWord').value = ''; document.getElementById('engPhonetic').value = ''; document.getElementById('engMeaning').value = '';
+  document.getElementById('engWord').focus();
+}
+
+function importCET4() {
+  const existing = new Set(app.englishWords.map(w=>w.word.toLowerCase()));
+  const newWords = CET4_WORDS.filter(w=>!existing.has(w.word.toLowerCase()));
+  if (newWords.length === 0) { toast('📝 四级词汇已全部导入！'); return; }
+  const now = Date.now();
+  const toAdd = newWords.map((w,i)=>({id:now+i, word:w.word, phonetic:w.phonetic, meaning:w.meaning, date:today()}));
+  app.englishWords.push(...toAdd);
+  persist(); renderEnglish();
+  toast(`✅ 已导入 ${toAdd.length} 个四级词汇！`);
+}
+
+function markReviewed(id) {
+  const word = app.englishWords.find(w=>w.id===id);
+  if (word) { word.date = today(); persist(); renderEnglish(); toast('✅ 已标记复习'); }
+}
+
+function deleteWord(id) {
+  app.englishWords = app.englishWords.filter(w=>w.id!==id);
+  persist(); renderEnglish();
+}
+
+function updateEngGoal() {
+  const goal = parseInt(document.getElementById('engGoal').value);
+  if (isNaN(goal) || goal<1) { toast('⚠️ 请输入有效目标'); return; }
+  app.englishGoal = goal; persist(); toast('🎯 每日目标已更新');
+}
+
+function renderEnglishChart(weekDays, weekCounts) {
+  destroyChart('englishWeek');
+  const ctx = document.getElementById('englishWeekChart');
+  if (!ctx) return;
+  const c = getChartColors();
+  const labels = weekDays.map(d=>{const dt=new Date(d+'T00:00:00');return ['日','一','二','三','四','五','六'][dt.getDay()];});
+  charts.englishWeek = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label:'学习单词',data:weekCounts,
+        backgroundColor: labels.map((_,i)=>weekCounts[i]>=app.englishGoal?c.green:c.indigo),
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        y: { beginAtZero: true, grid:{color:c.grid}, ticks:{color:c.text, maxTicksLimit:5, stepSize:1} },
+        x: { grid:{display:false}, ticks:{color:c.text} }
+      }
+    }
+  });
+}
+
+// --- 8. Accounting ---
+function renderAccounting() {
+  const el = document.getElementById('mod-accounting');
+  const prog = app.accountingProgress || {practice:[],finance_mgmt:[],law:[]};
+  const notes = app.accountingNotes || {practice:'',finance_mgmt:'',law:''};
+
+  // Calculate stats
+  let totalChapters = 0, completedChapters = 0;
+  ACCOUNTING_SUBJECTS.forEach(s=>{
+    totalChapters += s.chapters.length;
+    completedChapters += (prog[s.id]||[]).length;
+  });
+  const overallPct = totalChapters>0 ? Math.round(completedChapters/totalChapters*100) : 0;
+
+  el.innerHTML = `
+    <div class="module-header">📖 中级会计 · 2027备考</div>
+    <div class="stats-row">
+      <div class="stat-card purple"><div class="stat-value">${overallPct}%</div><div class="stat-label">总进度</div></div>
+      <div class="stat-card cyan"><div class="stat-value">${completedChapters}</div><div class="stat-label">已完成章节</div></div>
+      <div class="stat-card orange"><div class="stat-value">${totalChapters-completedChapters}</div><div class="stat-label">剩余章节</div></div>
+    </div>
+    <div class="completion-bar" style="margin-bottom:16px"><div class="completion-fill" style="width:${overallPct}%;background:var(--brand-purple)"></div></div>
+    ${ACCOUNTING_SUBJECTS.map(s=>{
+      const subjCompleted = (prog[s.id]||[]).length;
+      const subjTotal = s.chapters.length;
+      const subjPct = Math.round(subjCompleted/subjTotal*100);
+      return `
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">${s.icon} ${s.name} <span style="font-size:12px;color:var(--text-secondary);font-weight:400">${subjCompleted}/${subjTotal} 章</span></div>
+        <div class="completion-bar" style="margin-bottom:10px"><div class="completion-fill ${['purple','cyan','indigo'][ACCOUNTING_SUBJECTS.indexOf(s)]}" style="width:${subjPct}%"></div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px;margin-bottom:10px">
+          ${s.chapters.map((ch,i)=>{
+            const isDone = (prog[s.id]||[]).includes(i);
+            return `
+            <div class="todo-item ${isDone?'done':''}" style="padding:6px 8px;font-size:12px;cursor:pointer" onclick="toggleAccountingChapter('${s.id}',${i})">
+              <div class="todo-check" style="width:18px;height:18px;font-size:10px">✓</div>
+              <span class="todo-text" style="font-size:12px">第${i+1}章 ${escHtml(ch)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="section-title" style="margin-top:8px">📝 ${s.name} 笔记</div>
+        <textarea class="note-textarea" id="acctNote-${s.id}" placeholder="记录${s.name}的学习笔记、重点难点..." onchange="saveAccountingNote('${s.id}')">${escHtml(notes[s.id]||'')}</textarea>
+        <button class="btn btn-sm btn-secondary" style="margin-top:6px" onclick="saveAccountingNote('${s.id}')">💾 保存笔记</button>
+        ${ACCOUNTING_REFERENCES[s.id] ? `
+        <div class="ref-panel" id="refPanel-${s.id}">
+          <div class="ref-panel-header" onclick="toggleRefPanel('${s.id}')">
+            <span>${ACCOUNTING_REFERENCES[s.id].title}（${ACCOUNTING_REFERENCES[s.id].items.length}条）</span>
+            <span class="ref-panel-arrow">▼</span>
+          </div>
+          <div class="ref-panel-body">
+            ${ACCOUNTING_REFERENCES[s.id].items.map((item,i)=>`
+              <div class="ref-item" id="refItem-${s.id}-${i}" onclick="event.stopPropagation();toggleRefItem('${s.id}',${i})">
+                <div class="ref-item-label">${item.label}</div>
+                <div class="ref-item-content">${escHtml(item.content)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function toggleAccountingChapter(subjectId, chapterIdx) {
+  if (!app.accountingProgress) app.accountingProgress = {practice:[],finance_mgmt:[],law:[]};
+  const arr = app.accountingProgress[subjectId] || [];
+  const pos = arr.indexOf(chapterIdx);
+  if (pos >= 0) { arr.splice(pos,1); }
+  else { arr.push(chapterIdx); }
+  app.accountingProgress[subjectId] = arr;
+  persist(); renderAccounting();
+  const subj = ACCOUNTING_SUBJECTS.find(s=>s.id===subjectId);
+  const chName = subj?.chapters[chapterIdx]||'';
+  toast(`${pos>=0?'↩️ 取消':'✅ 完成'}：${subj?.name} 第${chapterIdx+1}章 ${chName}`);
+}
+
+function saveAccountingNote(subjectId) {
+  if (!app.accountingNotes) app.accountingNotes = {practice:'',finance_mgmt:'',law:''};
+  const ta = document.getElementById('acctNote-'+subjectId);
+  if (ta) { app.accountingNotes[subjectId] = ta.value; persist(); toast('📝 笔记已保存'); }
+}
+
+function toggleRefPanel(subjectId) {
+  document.getElementById('refPanel-'+subjectId).classList.toggle('open');
+}
+
+function toggleRefItem(subjectId, idx) {
+  document.getElementById('refItem-'+subjectId+'-'+idx).classList.toggle('open');
+}
+
+// --- 9. Work Memo ---
+const MEMO_CATEGORIES = [
+  {id:'meeting',label:'会议纪要',icon:'📋',color:'#5856d6'},
+  {id:'compliance',label:'合规风控',icon:'🛡️',color:'#ff375f'},
+  {id:'customer',label:'客户跟进',icon:'👤',color:'#0e71e3'},
+  {id:'staff',label:'员工管理',icon:'👥',color:'#34c759'},
+  {id:'performance',label:'业绩指标',icon:'📈',color:'#ff9500'},
+  {id:'operations',label:'日常运营',icon:'🏦',color:'#5ac8fa'},
+  {id:'other',label:'其他',icon:'📌',color:'#8e8e93'},
+];
+const MEMO_PRIORITIES = [
+  {id:'urgent',label:'🔴 紧急',cls:'tag-high'},
+  {id:'important',label:'🟡 重要',cls:'tag-mid'},
+  {id:'normal',label:'🟢 普通',cls:'tag-low'},
+];
+
+let memoFilterCat = 'all';
+let memoFilterPriority = 'all';
+let memoSearch = '';
+
+function renderWorkMemo() {
+  const el = document.getElementById('mod-workmemo');
+  const memos = app.workMemos || [];
+
+  // Filter
+  let filtered = memos;
+  if (memoFilterCat !== 'all') filtered = filtered.filter(m=>m.category===memoFilterCat);
+  if (memoFilterPriority !== 'all') filtered = filtered.filter(m=>m.priority===memoFilterPriority);
+  if (memoSearch) {
+    const kw = memoSearch.toLowerCase();
+    filtered = filtered.filter(m=>m.title.toLowerCase().includes(kw)||m.content.toLowerCase().includes(kw));
+  }
+  // Sort: pinned first, then by date desc
+  filtered.sort((a,b)=>{
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.date.localeCompare(a.date) || b.id - a.id;
+  });
+
+  const pinnedCount = memos.filter(m=>m.pinned).length;
+  const todayMemos = memos.filter(m=>m.date===today()).length;
+
+  el.innerHTML = `
+    <div class="module-header">🗒️ 工作备忘</div>
+    <div class="stats-row">
+      <div class="stat-card purple"><div class="stat-value">${memos.length}</div><div class="stat-label">全部备忘</div></div>
+      <div class="stat-card cyan"><div class="stat-value">${todayMemos}</div><div class="stat-label">今日新增</div></div>
+      <div class="stat-card orange"><div class="stat-value">${pinnedCount}</div><div class="stat-label">已置顶</div></div>
+    </div>
+    <!-- Add memo form -->
+    <div class="card">
+      <div class="card-title">✍️ 新建备忘</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="text" id="memoTitle" placeholder="备忘标题" style="flex:1;min-width:160px">
+        <select id="memoCategory" style="width:120px">
+          ${MEMO_CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')}
+        </select>
+        <select id="memoPriority" style="width:100px">
+          ${MEMO_PRIORITIES.map(p=>`<option value="${p.id}">${p.label}</option>`).join('')}
+        </select>
+      </div>
+      <textarea id="memoContent" placeholder="备忘详细内容..." class="note-textarea" style="min-height:70px"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-primary" onclick="addWorkMemo()">📌 保存备忘</button>
+      </div>
+    </div>
+    <!-- Filters -->
+    <div class="card card-sm" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:600;white-space:nowrap">🔍 筛选：</span>
+      <input type="text" id="memoSearch" placeholder="搜索标题或内容..." style="width:160px;padding:6px 10px;font-size:12px" value="${escHtml(memoSearch)}" oninput="memoSearch=this.value;renderWorkMemo()">
+      <select style="width:110px;padding:6px 10px;font-size:12px" onchange="memoFilterCat=this.value;renderWorkMemo()">
+        <option value="all" ${memoFilterCat==='all'?'selected':''}>全部分类</option>
+        ${MEMO_CATEGORIES.map(c=>`<option value="${c.id}" ${memoFilterCat===c.id?'selected':''}>${c.icon} ${c.label}</option>`).join('')}
+      </select>
+      <select style="width:100px;padding:6px 10px;font-size:12px" onchange="memoFilterPriority=this.value;renderWorkMemo()">
+        <option value="all" ${memoFilterPriority==='all'?'selected':''}>全部优先级</option>
+        ${MEMO_PRIORITIES.map(p=>`<option value="${p.id}" ${memoFilterPriority===p.id?'selected':''}>${p.label}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:var(--text-secondary)">共 ${filtered.length} 条</span>
+    </div>
+    <!-- Memo list -->
+    <div id="memoList">
+      ${filtered.length===0 ? `<div class="card" style="text-align:center;color:var(--text-secondary);padding:30px">📭 暂无备忘，快来添加吧！</div>` : filtered.map(m=>renderMemoItem(m)).join('')}
+    </div>
+  `;
+}
+
+function renderMemoItem(m) {
+  const cat = MEMO_CATEGORIES.find(c=>c.id===m.category)||MEMO_CATEGORIES[6];
+  const pri = MEMO_PRIORITIES.find(p=>p.id===m.priority)||MEMO_PRIORITIES[2];
+  return `
+  <div class="card card-sm" style="margin-bottom:8px;${m.pinned?'border-left:3px solid var(--brand-purple)':''}">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">${cat.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:14px">${escHtml(m.title)}</span>
+          <span class="tag ${pri.cls}" style="font-size:10px">${pri.label}</span>
+          ${m.pinned?'<span style="font-size:10px;color:var(--brand-purple)">📌 置顶</span>':''}
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;white-space:pre-wrap;line-height:1.5">${escHtml(m.content)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${cat.color}15;color:${cat.color};font-weight:600">${cat.label}</span>
+          <span style="font-size:11px;color:var(--text-tertiary)">${m.date}</span>
+          <button class="btn btn-xs btn-outline" onclick="togglePinMemo(${m.id})">${m.pinned?'📌取消置顶':'📌置顶'}</button>
+          <button class="btn btn-xs btn-outline" onclick="deleteWorkMemo(${m.id})">🗑</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function addWorkMemo() {
+  const title = document.getElementById('memoTitle').value.trim();
+  const content = document.getElementById('memoContent').value.trim();
+  if (!title) { toast('⚠️ 请填写备忘标题'); return; }
+  const category = document.getElementById('memoCategory').value;
+  const priority = document.getElementById('memoPriority').value;
+  if (!app.workMemos) app.workMemos = [];
+  app.workMemos.push({id:Date.now(), title, content, category, priority, date:today(), pinned:false});
+  persist(); renderWorkMemo(); toast('📌 备忘已保存');
+  document.getElementById('memoTitle').value = '';
+  document.getElementById('memoContent').value = '';
+}
+
+function togglePinMemo(id) {
+  const memo = (app.workMemos||[]).find(m=>m.id===id);
+  if (memo) { memo.pinned = !memo.pinned; persist(); renderWorkMemo(); }
+}
+
+function deleteWorkMemo(id) {
+  app.workMemos = (app.workMemos||[]).filter(m=>m.id!==id);
+  persist(); renderWorkMemo();
+}
+
+// --- 10. Photography ---
+const COMPOSITION_TAGS = ['三分法','对称构图','引导线','框架构图','对角线','留白','前景','俯拍','仰拍','逆光','剪影','微距','长曝光','人像','街拍','风光'];
+
+const PHOTO_TIPS = [
+  {title:'曝光三角',content:'光圈（f值越小光圈越大，景深越浅）+ 快门速度（越快越能凝固动作）+ ISO（越高噪点越多，尽量用低ISO）。三者的平衡决定曝光量。晴天f/16法则：在阳光下，光圈f/16时，快门速度=1/ISO。'},
+  {title:'三分法构图',content:'将画面用两条横线和两条竖线分为9等份，将主体放在四条线的交叉点上，比放在正中间更生动自然。大多数相机和手机都有三分网格线，建议开启。'},
+  {title:'引导线',content:'利用道路、河流、栏杆、墙壁等自然线条引导观众视线进入画面深处，创造空间感和纵深感。引导线可以是直线、曲线或对角线。'},
+  {title:'框架构图',content:'利用门窗、拱门、树枝等自然框架将主体"框"起来，增强层次感和聚焦效果，让观众注意力集中在主体上。'},
+  {title:'光线黄金时刻',content:'日出后和日落前的一小时是"黄金时刻"，光线柔和温暖，阴影拉长，色彩丰富，是拍摄的最佳时机。阴天则适合拍柔和人像（天然的柔光箱）。'},
+  {title:'对焦与景深',content:'大光圈（如f/1.8）产生浅景深，背景虚化（bokeh），适合人像和特写。小光圈（如f/11-f/16）产生大景深，前后都清晰，适合风光。对焦要对着主体的眼睛（人像）或最关键的点。'},
+  {title:'白平衡',content:'白平衡影响照片的色温。日光约5500K，阴天约6500K（偏暖），白炽灯约3200K（偏冷）。可根据创意调整——想暖色调就调高K值，冷色调就调低。'},
+  {title:'RAW vs JPEG',content:'RAW格式保留传感器所有原始数据，后期空间大（白平衡、曝光都可无损调整），但文件大。JPEG是相机处理过的压缩格式，方便分享。建议重要拍摄用RAW，日常记录用JPEG。'},
+  {title:'常见构图错误',content:'① 水平线歪斜——拍风光务必保持水平 ② 主体太小——靠近拍或使用长焦 ③ 背景杂乱——改变角度或使用浅景深 ④ 头顶"长"东西——注意背景中的电线杆、树枝等'},
+  {title:'提升技巧：每日一练',content:'每天选一个主题练习：周一·光影、周二·色彩、周三·线条、周四·纹理、周五·倒影、周六·人物、周日·自由创作。坚持一个月，摄影眼力会有质的提升。'},
+];
+
+let photoCompSelected = [];
+let photoRating = 0;
+let lightboxIdx = -1;
+
+function renderPhoto() {
+  const el = document.getElementById('mod-photo');
+  const photos = app.photos || [];
+  const avgRating = photos.length>0 ? (photos.reduce((s,p)=>s+(p.rating||0),0)/photos.length).toFixed(1) : '--';
+  const compCounts = {};
+  photos.forEach(p=>{(p.composition||[]).forEach(c=>{compCounts[c]=(compCounts[c]||0)+1;});});
+  const topComp = Object.entries(compCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  el.innerHTML = `
+    <div class="module-header">📷 摄影日志</div>
+    <div class="stats-row">
+      <div class="stat-card purple"><div class="stat-value">${photos.length}</div><div class="stat-label">作品总数</div></div>
+      <div class="stat-card cyan"><div class="stat-value">${avgRating}</div><div class="stat-label">平均评分 /5</div></div>
+      <div class="stat-card orange"><div class="stat-value">${topComp?topComp[0]:'--'}</div><div class="stat-label">最常用构图</div></div>
+    </div>
+    <!-- Upload form -->
+    <div class="card">
+      <div class="card-title">📤 上传新作品</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:1;min-width:200px">
+          <input type="file" id="photoFile" accept="image/*" style="padding:8px;font-size:13px" onchange="previewPhoto()">
+          <div id="photoPreview" style="margin-top:8px;display:none">
+            <img id="photoPreviewImg" style="max-width:100%;max-height:200px;border-radius:10px">
+          </div>
+        </div>
+        <div style="flex:2;min-width:260px">
+          <input type="text" id="photoTitle" placeholder="作品标题" style="margin-bottom:6px">
+          <textarea id="photoDesc" placeholder="拍摄心得、想法..." class="note-textarea" style="min-height:50px;margin-bottom:6px"></textarea>
+          <div class="exif-row" style="margin-bottom:6px">
+            <input type="text" id="photoAperture" placeholder="光圈 f/2.8">
+            <input type="text" id="photoShutter" placeholder="快门 1/250">
+            <input type="text" id="photoISO" placeholder="ISO 100">
+            <input type="text" id="photoFocal" placeholder="焦距 50mm">
+            <input type="text" id="photoCamera" placeholder="相机/手机型号">
+          </div>
+          <input type="text" id="photoLocation" placeholder="📍 拍摄地点" style="margin-bottom:6px">
+          <div style="margin-bottom:6px">
+            <div class="section-title" style="margin-bottom:6px">🎯 构图标签</div>
+            <div class="composition-grid" id="compTags">
+              ${COMPOSITION_TAGS.map(t=>`<button class="comp-select" data-tag="${t}" onclick="event.preventDefault();toggleCompTag('${t}')">${t}</button>`).join('')}
+            </div>
+          </div>
+          <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text-secondary)">⭐ 自我评分：</span>
+            <div class="star-rating" id="starRating">
+              ${[1,2,3,4,5].map(i=>`<span class="star ${i<=photoRating?'active':''}" onclick="event.preventDefault();setPhotoRating(${i})">★</span>`).join('')}
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="addPhoto()">📸 发布作品</button>
+        </div>
+      </div>
+    </div>
+    <!-- Gallery -->
+    <div class="card">
+      <div class="card-title">🖼 作品画廊 <span style="font-size:12px;color:var(--text-secondary);font-weight:400">（点击照片查看大图）</span></div>
+      ${photos.length===0 ? `<div style="text-align:center;color:var(--text-secondary);padding:40px"><div style="font-size:48px;margin-bottom:12px">📷</div>还没有作品，上传你的第一张照片吧！</div>` : `
+      <div class="photo-grid">
+        ${photos.sort((a,b)=>b.id-a.id).map((p,i)=>`
+          <div class="photo-card" onclick="openLightbox(${i})">
+            <img class="photo-card-img" src="${p.thumbnailUrl||p.dataUrl}" alt="${escHtml(p.title)}" loading="lazy">
+            <div class="photo-card-body">
+              <div class="photo-card-title">${escHtml(p.title)}</div>
+              <div class="photo-card-meta">
+                ${p.rating?`<span class="photo-rating">${'★'.repeat(p.rating)}${'☆'.repeat(5-p.rating)}</span>`:''}
+                <span>${p.date}</span>
+              </div>
+              ${(p.composition||[]).length>0 ? `<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">${p.composition.map(c=>`<span class="photo-comp-tag">${c}</span>`).join('')}</div>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>`}
+    </div>
+    <!-- Beginner tips -->
+    <div class="card">
+      <div class="card-title">📚 摄影入门指南</div>
+      ${PHOTO_TIPS.map((tip,i)=>`
+        <div class="ref-panel" style="margin-bottom:4px">
+          <div class="ref-panel-header" onclick="this.parentElement.classList.toggle('open')">
+            <span>💡 ${tip.title}</span>
+            <span class="ref-panel-arrow">▼</span>
+          </div>
+          <div class="ref-panel-body"><p style="font-size:13px;color:var(--text-secondary);line-height:1.7">${tip.content}</p></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function previewPhoto() {
+  const file = document.getElementById('photoFile').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoPreviewImg').src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggleCompTag(tag) {
+  const idx = photoCompSelected.indexOf(tag);
+  if (idx>=0) photoCompSelected.splice(idx,1);
+  else photoCompSelected.push(tag);
+  document.querySelectorAll('#compTags .comp-select').forEach(b=>{
+    b.classList.toggle('active', photoCompSelected.includes(b.dataset.tag));
+  });
+}
+
+function setPhotoRating(r) {
+  photoRating = r;
+  document.querySelectorAll('#starRating .star').forEach((s,i)=>s.classList.toggle('active',i<r));
+}
+
+function addPhoto() {
+  const fileInput = document.getElementById('photoFile');
+  const file = fileInput.files[0];
+  const title = document.getElementById('photoTitle').value.trim();
+  if (!file) { toast('⚠️ 请选择照片文件'); return; }
+  if (!title) { toast('⚠️ 请填写作品标题'); return; }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Resize image to save localStorage space
+    const img = new Image();
+    img.onload = function() {
+      const maxW = 800;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
+      // Thumbnail
+      const thumbW = 400;
+      let tw = img.width, th = img.height;
+      if (tw > thumbW) { th = Math.round(th * thumbW / tw); tw = thumbW; }
+      const tCanvas = document.createElement('canvas');
+      tCanvas.width = tw; tCanvas.height = th;
+      const tCtx = tCanvas.getContext('2d');
+      tCtx.drawImage(img, 0, 0, tw, th);
+      const thumbUrl = tCanvas.toDataURL('image/jpeg', 0.5);
+
+      if (!app.photos) app.photos = [];
+      app.photos.push({
+        id: Date.now(),
+        title,
+        description: document.getElementById('photoDesc').value.trim(),
+        dataUrl, thumbnailUrl: thumbUrl,
+        date: today(),
+        aperture: document.getElementById('photoAperture').value.trim(),
+        shutterSpeed: document.getElementById('photoShutter').value.trim(),
+        iso: document.getElementById('photoISO').value.trim(),
+        focalLength: document.getElementById('photoFocal').value.trim(),
+        camera: document.getElementById('photoCamera').value.trim(),
+        location: document.getElementById('photoLocation').value.trim(),
+        composition: [...photoCompSelected],
+        rating: photoRating,
+      });
+      persist();
+
+      // Reset form
+      fileInput.value = '';
+      document.getElementById('photoPreview').style.display = 'none';
+      document.getElementById('photoTitle').value = '';
+      document.getElementById('photoDesc').value = '';
+      document.getElementById('photoAperture').value = '';
+      document.getElementById('photoShutter').value = '';
+      document.getElementById('photoISO').value = '';
+      document.getElementById('photoFocal').value = '';
+      document.getElementById('photoCamera').value = '';
+      document.getElementById('photoLocation').value = '';
+      photoCompSelected = [];
+      photoRating = 0;
+
+      renderPhoto();
+      toast('📸 作品已发布！');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function openLightbox(idx) {
+  const photos = (app.photos||[]).sort((a,b)=>b.id-a.id);
+  lightboxIdx = idx;
+  showLightboxPhoto(photos[idx]);
+}
+
+function showLightboxPhoto(p) {
+  let overlay = document.getElementById('lightboxOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'lightboxOverlay';
+    overlay.className = 'lightbox-overlay';
+    overlay.innerHTML = `
+      <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+      <button class="lightbox-nav prev" onclick="lightboxNav(-1)">‹</button>
+      <button class="lightbox-nav next" onclick="lightboxNav(1)">›</button>
+      <img class="lightbox-img" id="lightboxImg" src="">
+      <div class="lightbox-info" id="lightboxInfo"></div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeLightbox();
+    });
+  }
+  document.getElementById('lightboxImg').src = p.dataUrl;
+  const exifParts = [];
+  if (p.aperture) exifParts.push(`光圈 ${p.aperture}`);
+  if (p.shutterSpeed) exifParts.push(`快门 ${p.shutterSpeed}`);
+  if (p.iso) exifParts.push(`ISO ${p.iso}`);
+  if (p.focalLength) exifParts.push(`焦距 ${p.focalLength}`);
+  if (p.camera) exifParts.push(p.camera);
+  document.getElementById('lightboxInfo').innerHTML = `
+    <div style="font-size:18px;font-weight:600;margin-bottom:4px">${escHtml(p.title)}</div>
+    ${p.description?`<div style="margin-bottom:4px;opacity:.8">${escHtml(p.description)}</div>`:''}
+    <div style="font-size:11px;opacity:.6;margin-bottom:4px">${p.date}${p.location?` · 📍 ${escHtml(p.location)}`:''}</div>
+    ${exifParts.length>0?`<div style="font-size:11px;opacity:.5;margin-bottom:4px">${exifParts.join(' · ')}</div>`:''}
+    ${p.rating?`<div style="color:#ff9500;font-size:16px">${'★'.repeat(p.rating)}${'☆'.repeat(5-p.rating)}</div>`:''}
+    ${(p.composition||[]).length>0?`<div style="margin-top:4px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap">${p.composition.map(c=>`<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(175,82,222,.3);color:#fff">${c}</span>`).join('')}</div>`:''}
+  `;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Keyboard nav
+  document.addEventListener('keydown', lightboxKeyHandler);
+}
+
+function lightboxNav(dir) {
+  const photos = (app.photos||[]).sort((a,b)=>b.id-a.id);
+  lightboxIdx = (lightboxIdx + dir + photos.length) % photos.length;
+  showLightboxPhoto(photos[lightboxIdx]);
+}
+
+function lightboxKeyHandler(e) {
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') lightboxNav(-1);
+  if (e.key === 'ArrowRight') lightboxNav(1);
+}
+
+function closeLightbox() {
+  const overlay = document.getElementById('lightboxOverlay');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', lightboxKeyHandler);
+}
+
+// --- 11. Theme ---
+function renderTheme() {
+  const el = document.getElementById('mod-theme');
+  const s = getComputedStyle(document.documentElement);
+  const colors = [
+    {var:'--bg',label:'页面背景',def:'#f5f5f7'},
+    {var:'--card-bg',label:'卡片背景',def:'#ffffff'},
+    {var:'--text',label:'主文字色',def:'#1d1d1f'},
+    {var:'--text-secondary',label:'次要文字色',def:'#86868b'},
+    {var:'--sidebar-bg',label:'侧边栏背景',def:'#f0f0f3'},
+    {var:'--brand-purple',label:'品牌紫色',def:'#af52de'},
+    {var:'--brand-cyan',label:'品牌青色',def:'#5ac8fa'},
+    {var:'--brand-indigo',label:'品牌靛蓝',def:'#5856d6'},
+    {var:'--blue',label:'功能蓝色',def:'#0e71e3'},
+    {var:'--green',label:'功能绿色',def:'#34c759'},
+    {var:'--orange',label:'功能橙色',def:'#ff9500'},
+    {var:'--pink',label:'功能粉色',def:'#ff375f'},
+  ];
+  el.innerHTML = `
+    <div class="module-header">🎨 主题配色</div>
+    <div class="card">
+      <div class="card-title">🖌 颜色调整</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-secondary" onclick="setTheme('light')">☀️ 浅色模式</button>
+        <button class="btn btn-secondary" onclick="setTheme('dark')">🌙 暗色模式</button>
+        <button class="btn btn-outline" onclick="resetColors()">🔄 恢复默认</button>
+      </div>
+      ${colors.map(c=>`
+        <div class="color-row">
+          <div class="color-swatch" style="background:${s.getPropertyValue(c.var).trim()}"></div>
+          <span class="color-label">${c.label}</span>
+          <input type="color" class="color-input" value="${s.getPropertyValue(c.var).trim()}" data-var="${c.var}" onchange="updateColor('${c.var}',this.value)">
+          <code style="font-size:11px;color:var(--text-tertiary)">${s.getPropertyValue(c.var).trim()}</code>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">💾 配色预设</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-secondary" onclick="applyPreset('apple')">🍎 苹果原色</button>
+        <button class="btn btn-sm btn-secondary" onclick="applyPreset('ocean')">🌊 海洋蓝</button>
+        <button class="btn btn-sm btn-secondary" onclick="applyPreset('forest')">🌿 森林绿</button>
+        <button class="btn btn-sm btn-secondary" onclick="applyPreset('sunset')">🌅 日落橙</button>
+      </div>
+    </div>
+  `;
+}
+
+function updateColor(variable, value) {
+  document.documentElement.style.setProperty(variable, value);
+}
+
+function applyPreset(name) {
+  const presets = {
+    apple: {'--bg':'#f5f5f7','--card-bg':'#ffffff','--text':'#1d1d1f','--text-secondary':'#86868b','--sidebar-bg':'#f0f0f3','--brand-purple':'#af52de','--brand-cyan':'#5ac8fa','--brand-indigo':'#5856d6','--blue':'#0e71e3','--green':'#34c759','--orange':'#ff9500','--pink':'#ff375f'},
+    ocean: {'--bg':'#f0f4f8','--card-bg':'#ffffff','--text':'#1a2332','--text-secondary':'#5a7d9a','--sidebar-bg':'#e3edf5','--brand-purple':'#4a90d9','--brand-cyan':'#2cc5d2','--brand-indigo':'#2563eb','--blue':'#1e88e5','--green':'#26a69a','--orange':'#ff7043','--pink':'#ec407a'},
+    forest: {'--bg':'#f2f5f0','--card-bg':'#ffffff','--text':'#1d2d1a','--text-secondary':'#6b8a5e','--sidebar-bg':'#e8f0e3','--brand-purple':'#4caf50','--brand-cyan':'#2ecc71','--brand-indigo':'#27ae60','--blue':'#3498db','--green':'#2ecc71','--orange':'#f39c12','--pink':'#e74c3c'},
+    sunset: {'--bg':'#fdf6f0','--card-bg':'#ffffff','--text':'#3d2010','--text-secondary':'#b07d5c','--sidebar-bg':'#fceedd','--brand-purple':'#ff6b6b','--brand-cyan':'#ffa94d','--brand-indigo':'#ff6348','--blue':'#4ecdc4','--green':'#2ecc71','--orange':'#ff9500','--pink':'#ff375f'},
+  };
+  const preset = presets[name];
+  if (preset) {
+    Object.entries(preset).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+    toast('🎨 配色已应用');
+    renderTheme();
+  }
+}
+
+function resetColors() {
+  applyPreset('apple');
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  app.theme = theme;
+  const label = document.getElementById('themeLabel');
+  const toggle = document.getElementById('themeToggle');
+  if (label) label.textContent = theme==='dark'?'亮色模式':'暗色模式';
+  if (toggle) toggle.querySelector('span').textContent = theme==='dark'?'☀️':'🌙';
+  persist();
+  // Re-render current module to update charts
+  renderModule(currentModule);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  setTheme(current==='dark'?'light':'dark');
+}
+
+// ==================== AI SMART INPUT ====================
+function toggleAIPopup() {
+  const popup = document.getElementById('aiPopup');
+  popup.classList.toggle('open');
+  if (popup.classList.contains('open')) {
+    document.getElementById('aiInput').focus();
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('aiPopup');
+  const btn = document.querySelector('.ai-btn');
+  if (popup.classList.contains('open') && !popup.contains(e.target) && !btn.contains(e.target)) {
+    popup.classList.remove('open');
+  }
+});
+
+const aiInput = document.getElementById('aiInput');
+if (aiInput) {
+  aiInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') parseAIInput();
+  });
+}
+
+function parseAIInput() {
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const result = document.getElementById('aiResult');
+
+  // Amount extraction
+  const amountMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:块|元|块钱|元钱)/);
+  const calMatch = text.match(/(\d+)\s*(?:卡|卡路里|kcal|大卡)/i);
+  const minMatch = text.match(/(\d+)\s*(?:分钟|分)/);
+  const pageMatch = text.match(/(\d+)\s*(?:页)/);
+  const wordCountMatch = text.match(/(\d+)\s*(?:个单词|单词|个词)/);
+  const numMatch = text.match(/(\d+(?:\.\d+)?)/);
+
+  // Finance - expense
+  if (/花了|消费|支出|买了|付了/.test(text)) {
+    const amt = amountMatch ? parseFloat(amountMatch[1]) : (numMatch?parseFloat(numMatch[1]):null);
+    if (!amt) { showAIResult('⚠️ 请说明金额，如"花了10块"'); return; }
+    let cat = '其他';
+    for (const c of CATEGORIES_EXPENSE) { if (text.includes(c)) { cat = c; break; } }
+    if (/饭|餐|吃|外卖|奶茶|咖啡|饮料/.test(text)) cat = '餐饮';
+    if (/车|地铁|公交|打车|加油/.test(text)) cat = '交通';
+    if (/房|租|水电|物业/.test(text)) cat = '住房';
+    if (/药|医院|看病/.test(text)) cat = '医疗';
+    if (/电影|游戏|唱歌|旅游/.test(text)) cat = '娱乐';
+    if (/衣|鞋|包|数码|手机|电脑/.test(text)) cat = '购物';
+    app.finances.push({id:Date.now(), type:'expense', category:cat, amount:amt, note:'' , date:today()});
+    persist(); showAIResult(`✅ 已记录支出：${cat} ${formatMoney(amt)}`); input.value = '';
+    return;
+  }
+
+  // Finance - income
+  if (/收入|赚了|工资|奖金|到账|发工资/.test(text)) {
+    const amt = amountMatch ? parseFloat(amountMatch[1]) : (numMatch?parseFloat(numMatch[1]):null);
+    if (!amt) { showAIResult('⚠️ 请说明金额，如"收入100块"'); return; }
+    let cat = '其他';
+    for (const c of CATEGORIES_INCOME) { if (text.includes(c)) { cat = c; break; } }
+    if (/工资/.test(text)) cat = '工资';
+    if (/理财|基金|股票|利息/.test(text)) cat = '理财';
+    if (/奖金/.test(text)) cat = '奖金';
+    if (/兼职/.test(text)) cat = '兼职';
+    app.finances.push({id:Date.now(), type:'income', category:cat, amount:amt, note:'' , date:today()});
+    persist(); showAIResult(`✅ 已记录收入：${cat} ${formatMoney(amt)}`); input.value = '';
+    return;
+  }
+
+  // Diet
+  if (/吃了|午饭|晚饭|早饭|早餐|午餐|晚餐|加餐|摄入/.test(text)) {
+    const cal = calMatch ? parseInt(calMatch[1]) : (numMatch?parseInt(numMatch[1]):null);
+    let foodName = text.replace(/吃了|午饭|晚饭|早饭|早餐|午餐|晚餐|加餐|摄入|\d+/g,'').trim()||'食物';
+    let meal = 2; // default lunch
+    if (/早/.test(text)) meal = 0;
+    if (/午/.test(text)) meal = 1;
+    if (/晚/.test(text)) meal = 2;
+    if (/加餐|零食|点心/.test(text)) meal = 3;
+    app.dietRecords.push({id:Date.now(), name:foodName, cal:cal||300, meal, date:today()});
+    persist(); showAIResult(`✅ 已记录饮食：${foodName} ${cal||300}kcal`); input.value = '';
+    return;
+  }
+
+  // Exercise
+  const exMatch = EXERCISES.find(e=>text.includes(e.name));
+  if (exMatch || /运动|锻炼|打卡/.test(text)) {
+    const exType = exMatch ? exMatch.id : 'running';
+    const ex = EXERCISES.find(e=>e.id===exType);
+    const isReps = ex?.unit === '次';
+    const repsMatch = text.match(/(\d+)\s*(?:次|个)/);
+    const amount = isReps
+      ? (repsMatch ? parseInt(repsMatch[1]) : (numMatch?parseInt(numMatch[1]):30))
+      : (minMatch ? parseInt(minMatch[1]) : (numMatch?parseInt(numMatch[1]):30));
+    app.exercises.push({
+      id:Date.now(), type:exType,
+      duration: isReps ? 0 : amount,
+      reps: isReps ? amount : 0,
+      cal:Math.round(amount*(isReps?0.5:6)), date:today()
+    });
+    const exName = ex?.name||'运动';
+    const label = isReps ? `${amount}次` : `${amount}分钟`;
+    persist(); showAIResult(`✅ 已记录运动：${exName} ${label}`); input.value = '';
+    return;
+  }
+
+  // Mood
+  if (/心情|感觉|情绪/.test(text)) {
+    let moodEmoji = '😊', moodVal = 5;
+    if (/不错|好|开心|高兴|快乐|棒/.test(text)) { moodEmoji='😊'; moodVal=5; }
+    else if (/一般|还行|凑合/.test(text)) { moodEmoji='😐'; moodVal=3; }
+    else if (/平静|淡定|安/.test(text)) { moodEmoji='😌'; moodVal=4; }
+    else if (/难过|伤心|哭|低落/.test(text)) { moodEmoji='😔'; moodVal=2; }
+    else if (/生气|愤怒|烦/.test(text)) { moodEmoji='😤'; moodVal=1; }
+    else if (/焦虑|紧张|担心/.test(text)) { moodEmoji='😰'; moodVal=1.5; }
+    const existing = app.moods.find(m=>m.date===today());
+    if (existing) { existing.emoji=moodEmoji; existing.value=moodVal; }
+    else { app.moods.push({id:Date.now(), emoji:moodEmoji, value:moodVal, date:today(), diary:''}); }
+    persist(); showAIResult(`✅ 已记录心情：${moodEmoji}`); input.value = '';
+    return;
+  }
+
+  // Reading
+  if (/读了|看书|阅读/.test(text)) {
+    const pages = pageMatch ? parseInt(pageMatch[1]) : (numMatch?parseInt(numMatch[1]):null);
+    if (!pages) { showAIResult('⚠️ 请说明页数，如"读了30页"'); return; }
+    if (app.books.length === 0) { showAIResult('⚠️ 请先添加书籍'); return; }
+    const book = app.books[app.books.length-1];
+    book.current = Math.min(book.totalPages, book.current + pages);
+    persist(); showAIResult(`✅ 已更新阅读进度：${book.title} +${pages}页`); input.value = '';
+    return;
+  }
+
+  // English
+  if (/学了|背了|单词/.test(text)) {
+    const count = wordCountMatch?parseInt(wordCountMatch[1]):1;
+    showAIResult(`💡 请使用英语模块添加 ${count} 个新单词吧！已为你切换到英语模块。`);
+    switchModule('english'); input.value = '';
+    return;
+  }
+
+  // Work Memo
+  if (/备忘|记住|提醒|别忘了|重要.*记录|会议.*记录/.test(text)) {
+    const title = text.replace(/备忘|记住|提醒|别忘了/g,'').trim()||'工作备忘';
+    if (!app.workMemos) app.workMemos = [];
+    let cat = 'other';
+    if (/会议|开会/.test(text)) cat = 'meeting';
+    if (/合规|风控|风险|检查|审计|监管/.test(text)) cat = 'compliance';
+    if (/客户|VIP|贵宾/.test(text)) cat = 'customer';
+    if (/员工|同事|下属|团队|人手/.test(text)) cat = 'staff';
+    if (/业绩|指标|KPI|目标|存款|贷款/.test(text)) cat = 'performance';
+    if (/运营|网点|营业|开门|关门/.test(text)) cat = 'operations';
+    let priority = 'normal';
+    if (/紧急|立刻|马上|赶快/.test(text)) priority = 'urgent';
+    if (/重要|关键|重点/.test(text)) priority = 'important';
+    app.workMemos.push({id:Date.now(), title:title.substring(0,50), content:'', category:cat, priority, date:today(), pinned:false});
+    const catLabel = MEMO_CATEGORIES.find(c=>c.id===cat)?.label||'';
+    persist(); showAIResult(`✅ 已添加备忘：${title.substring(0,20)}（${catLabel}）`); input.value = '';
+    return;
+  }
+
+  showAIResult('🤔 未识别，请尝试："花了10块"、"跳绳30分钟"、"心情不错"、"吃了午饭500卡"、\\"备忘明天开晨会\\"等');
+}
+
+function showAIResult(msg) {
+  const result = document.getElementById('aiResult');
+  result.textContent = msg;
+  result.style.display = 'block';
+  setTimeout(()=>{result.style.display='none';}, 4000);
+  // Refresh current module view
+  renderModule(currentModule);
+}
+
+// ==================== WEEKLY ANALYSIS ====================
+function openWeeklyAnalysis() {
+  const overlay = document.getElementById('weeklyModalOverlay');
+  const content = document.getElementById('weeklyContent');
+  const weekDays = getWeekDays();
+  const ws = weekStart();
+  const todayStr = today();
+
+  // Collect week data
+  const weekTodos = app.todos.filter(t=>t.date>=ws&&t.date<=todayStr);
+  const weekDiet = app.dietRecords.filter(r=>r.date>=ws&&r.date<=todayStr);
+  const weekEx = app.exercises.filter(e=>e.date>=ws&&e.date<=todayStr);
+  const weekFin = app.finances.filter(f=>f.date>=ws&&f.date<=todayStr);
+  const weekMoods = app.moods.filter(m=>m.date>=ws&&m.date<=todayStr);
+  const weekEng = app.englishWords.filter(w=>w.date>=ws&&w.date<=todayStr);
+  const weekMemos = (app.workMemos||[]).filter(m=>m.date>=ws&&m.date<=todayStr);
+  const totalMemos = (app.workMemos||[]).length;
+  const pinnedMemos = (app.workMemos||[]).filter(m=>m.pinned).length;
+
+  const todoDone = weekTodos.filter(t=>t.done).length;
+  const todoTotal = weekTodos.length;
+  const avgCal = weekDiet.length>0?Math.round(weekDiet.reduce((s,r)=>s+r.cal,0)/7):0;
+  const exDays = new Set(weekEx.map(e=>e.date)).size;
+  const exMinutes = weekEx.reduce((s,e)=>s+e.duration,0);
+  const exReps = weekEx.reduce((s,e)=>s+(e.reps||0),0);
+  const income = weekFin.filter(f=>f.type==='income').reduce((s,f)=>s+f.amount,0);
+  const expense = weekFin.filter(f=>f.type==='expense').reduce((s,f)=>s+f.amount,0);
+  const avgMood = weekMoods.length>0?(weekMoods.reduce((s,m)=>s+m.value,0)/weekMoods.length).toFixed(1):'--';
+  const engCount = weekEng.length;
+
+  // Generate insights
+  const insights = [];
+  if (avgCal > app.dietGoal) insights.push({icon:'⚠️',text:`本周日均摄入 ${avgCal} kcal，超出目标 ${app.dietGoal} kcal，建议控制饮食。`});
+  else if (avgCal > 0) insights.push({icon:'✅',text:`本周日均摄入 ${avgCal} kcal，维持在目标范围内，很棒！`});
+
+  if (exDays >= 5) insights.push({icon:'🌟',text:`本周运动 ${exDays} 天，共 ${exMinutes} 分钟，运动习惯良好！`});
+  else if (exDays > 0) insights.push({icon:'💪',text:`本周运动 ${exDays} 天，建议增加到每周至少3-5天。`});
+  else insights.push({icon:'🏃',text:'本周还没有运动记录，记得抽时间活动身体哦！'});
+
+  if (expense > income && income > 0) insights.push({icon:'💡',text:`本周支出 (${formatMoney(expense)}) 大于收入 (${formatMoney(income)})，注意控制开支。`});
+  else if (income > expense) insights.push({icon:'💰',text:`本周结余 ${formatMoney(income-expense)}，继续保持储蓄习惯！`});
+
+  if (engCount >= app.englishGoal * 5) insights.push({icon:'📝',text:`本周学习 ${engCount} 个单词，超额完成任务，太厉害了！`});
+  else if (engCount > 0) insights.push({icon:'📖',text:`本周学习 ${engCount} 个单词，坚持每天学习会进步更快。`});
+
+  if (weekMoods.length >= 5 && avgMood >= 4) insights.push({icon:'😊',text:'本周心情整体不错，保持积极心态！'});
+  else if (weekMoods.length > 0 && avgMood < 3) insights.push({icon:'💙',text:'本周情绪偏低，记得给自己一些放松的时间。'});
+
+  if (insights.length === 0) insights.push({icon:'📊',text:'本周数据较少，多记录生活点滴，我会为你提供更精准的分析。'});
+
+  content.innerHTML = `
+    <div class="modal-section">
+      <h4>📋 每日计划</h4>
+      <p>本周完成 ${todoDone}/${todoTotal} 个任务${todoTotal>0?`，完成率 ${Math.round(todoDone/todoTotal*100)}%`:''}</p>
+    </div>
+    <div class="modal-section">
+      <h4>🥗 饮食健康</h4>
+      <p>日均摄入 ${avgCal} kcal | 目标 ${app.dietGoal} kcal | 共记录 ${weekDiet.length} 餐</p>
+    </div>
+    <div class="modal-section">
+      <h4>🏃 运动健身</h4>
+      <p>运动 ${exDays} 天 | 有氧 ${exMinutes} 分钟${exReps>0?` | 力量 ${exReps} 次`:''} | 约消耗 ${formatCal(weekEx.reduce((s,e)=>s+e.cal,0))} kcal</p>
+    </div>
+    <div class="modal-section">
+      <h4>💰 财务概览</h4>
+      <p>收入 ${formatMoney(income)} | 支出 ${formatMoney(expense)} | 结余 ${formatMoney(income-expense)}</p>
+    </div>
+    <div class="modal-section">
+      <h4>📚 读书学习</h4>
+      <p>${app.books.filter(b=>b.current>0).length} 本书在读 | 本周学习 ${engCount} 个单词</p>
+      ${(()=>{const prog=app.accountingProgress||{};let c=0,t=0;ACCOUNTING_SUBJECTS.forEach(s=>{t+=s.chapters.length;c+=(prog[s.id]||[]).length;});return t>0?`<p style="margin-top:4px">📖 中级会计：${c}/${t} 章节已完成（${Math.round(c/t*100)}%）</p>`:'';})()}
+    </div>
+    <div class="modal-section">
+      <h4>💭 心情指数</h4>
+      <p>平均心情 ${avgMood}/5 | 记录 ${weekMoods.length} 天</p>
+    </div>
+    <div class="modal-section">
+      <h4>🗒️ 工作备忘</h4>
+      <p>本周新增 ${weekMemos.length} 条备忘 | 累计 ${totalMemos} 条${pinnedMemos>0?` | ${pinnedMemos} 条置顶`:''}</p>
+    </div>
+    <div class="modal-section">
+      <h4>📷 摄影日志</h4>
+      <p>累计 ${(app.photos||[]).length} 张作品${(()=>{const p=app.photos||[];if(p.length===0)return'';const avg=(p.reduce((s,x)=>s+(x.rating||0),0)/p.length).toFixed(1);return` | 平均评分 ${avg}/5`;})()}</p>
+    </div>
+    <div class="modal-section">
+      <h4>🤖 AI 洞察建议</h4>
+      ${insights.map(i=>`<div class="insight-item"><span class="insight-icon">${i.icon}</span><span>${i.text}</span></div>`).join('')}
+    </div>
+  `;
+  overlay.classList.add('open');
+}
+
+function closeWeeklyAnalysis(e) {
+  if (e && e.target !== document.getElementById('weeklyModalOverlay')) return;
+  document.getElementById('weeklyModalOverlay').classList.remove('open');
+}
+
+// ==================== EXPORT / IMPORT ====================
+function exportData() {
+  const blob = new Blob([JSON.stringify(app, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `life-manager-backup-${today()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('📤 数据已导出');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      app = {...DEFAULT_DATA, ...data};
+      persist();
+      switchModule(currentModule);
+      toast('📥 数据已导入');
+    } catch(err) {
+      toast('⚠️ 文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ==================== MODULE ROUTER ====================
+function renderModule(id) {
+  switch(id) {
+    case 'plan': renderPlan(); break;
+    case 'diet': renderDiet(); break;
+    case 'exercise': renderExercise(); break;
+    case 'finance': renderFinance(); break;
+    case 'reading': renderReading(); break;
+    case 'mood': renderMood(); break;
+    case 'english': renderEnglish(); break;
+    case 'accounting': renderAccounting(); break;
+    case 'workmemo': renderWorkMemo(); break;
+    case 'photo': renderPhoto(); break;
+    case 'theme': renderTheme(); break;
+  }
+}
+
+// ==================== INIT ====================
+function init() {
+  if (app.theme) {
+    document.documentElement.setAttribute('data-theme', app.theme);
+  }
+  const themeLabel = document.getElementById('themeLabel');
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  if (themeLabel) themeLabel.textContent = currentTheme==='dark'?'亮色模式':'暗色模式';
+  const toggle = document.getElementById('themeToggle');
+  if (toggle) toggle.querySelector('span').textContent = currentTheme==='dark'?'☀️':'🌙';
+
+  buildSidebar();
+  buildMainContent();
+  switchModule('plan');
+
+  // Set active nav item
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.module==='plan'));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  init();
+
+  // Close sidebar when clicking main content on mobile
+  document.getElementById('mainContent').addEventListener('click', function(e) {
+    if (window.innerWidth <= 768) closeSidebar();
+  });
+
+  // Handle keyboard shortcut for closing modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const lb = document.getElementById('lightboxOverlay');
+      if (lb && lb.classList.contains('open')) { closeLightbox(); return; }
+      document.getElementById('weeklyModalOverlay').classList.remove('open');
+      document.getElementById('aiPopup').classList.remove('open');
+    }
+  });
+});
+</script>
+</body>
+</html>
