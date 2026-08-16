@@ -3143,7 +3143,6 @@ function togglePomodoro() {
 
 function startOrResumePomodoro() {
   PomoAudio._ensure();
-  PomoAudio.unlockBell();
   pomoState.running = true;
   pomoState.endTime = Date.now() + pomoState.remaining*1000;
   app.pomodoro.active = pomoSnapshot();
@@ -3203,7 +3202,7 @@ function completePomoPhase() {
   const finished = pomoState.phase;
   stopPomoInterval();
   PomoAudio.stop();
-  PomoAudio.chime(finished === 'work' ? 'work' : 'rest');
+  PomoAudio.alarm();
   let next;
   if (finished === 'work') {
     recordPomodoro();
@@ -3461,7 +3460,7 @@ async function removeMusic(mode) {
   else app.pomodoro.settings.restMusic = null;
   PomoAudio._blobs[mode] = null;
   persist();
-  toast('🎵 已恢复内置' + (mode === 'work' ? '专注' : '放松') + '音效');
+  toast('🎵 已恢复内置' + (mode === 'work' ? '雨声' : '春天音效'));
   if (pomoState && pomoState.running && currentPomoAudioMode() === mode) PomoAudio.play(mode);
   renderPomodoro();
 }
@@ -3602,13 +3601,13 @@ function renderPomodoro() {
       <div class="card-title">🎵 本地音乐</div>
       <div class="music-row">
         <span class="music-label">🍅 工作音乐</span>
-        <span class="music-name">${s.workMusic ? escHtml(s.workMusic.name) : '内置专注音效'}</span>
+        <span class="music-name">${s.workMusic ? escHtml(s.workMusic.name) : '内置雨声（淅沥淅沥）'}</span>
         <button class="btn btn-xs btn-outline" onclick="uploadMusic('work')">${s.workMusic ? '更换' : '上传'}</button>
         ${s.workMusic ? `<button class="btn btn-xs btn-outline" onclick="previewMusic('work')">试听</button><button class="btn btn-xs btn-outline" onclick="removeMusic('work')">恢复内置</button>` : ''}
       </div>
       <div class="music-row">
         <span class="music-label">☕ 休息音乐</span>
-        <span class="music-name">${s.restMusic ? escHtml(s.restMusic.name) : '内置放松音效'}</span>
+        <span class="music-name">${s.restMusic ? escHtml(s.restMusic.name) : '内置春天（虫鸣鸟叫）'}</span>
         <button class="btn btn-xs btn-outline" onclick="uploadMusic('rest')">${s.restMusic ? '更换' : '上传'}</button>
         ${s.restMusic ? `<button class="btn btn-xs btn-outline" onclick="previewMusic('rest')">试听</button><button class="btn btn-xs btn-outline" onclick="removeMusic('rest')">恢复内置</button>` : ''}
       </div>
@@ -3679,70 +3678,12 @@ function renderDogSVG(state) {
 }
 
 // ==================== POMODORO AUDIO (Web Audio 合成) ====================
-function encodeWav(samples, sr) {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-  const ws = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
-  ws(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true); ws(8, 'WAVE');
-  ws(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
-  view.setUint32(24, sr, true); view.setUint32(28, sr * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
-  ws(36, 'data'); view.setUint32(40, samples.length * 2, true);
-  let off = 44;
-  for (let i = 0; i < samples.length; i++, off += 2) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-  const bytes = new Uint8Array(buffer);
-  let bin = '';
-  const CHUNK = 0x8000;
-  for (let i = 0; i < bytes.length; i += CHUNK) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
-  return 'data:audio/wav;base64,' + btoa(bin);
-}
-function bellWav(freqs) {
-  const sr = 44100, gap = 0.28, dur = 1.0;
-  const total = freqs.length * gap + dur + 0.15;
-  const n = Math.floor(sr * total);
-  const samples = new Float32Array(n);
-  const partials = [[1, 1.0], [2.0, 0.5], [2.98, 0.32], [4.17, 0.18], [5.43, 0.1]];
-  freqs.forEach((freq, s) => {
-    const start = Math.floor(s * gap * sr);
-    const len = Math.floor(dur * sr);
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const env = Math.exp(-3.8 * t);
-      let v = 0;
-      for (let p = 0; p < partials.length; p++) {
-        v += Math.sin(2 * Math.PI * freq * partials[p][0] * t) * partials[p][1];
-      }
-      const idx = start + i;
-      if (idx < n) samples[idx] += v * env * 0.35;
-    }
-  });
-  let max = 0;
-  for (let i = 0; i < n; i++) max = Math.max(max, Math.abs(samples[i]));
-  if (max > 0) { const g = 0.85 / max; for (let i = 0; i < n; i++) samples[i] *= g; }
-  return encodeWav(samples, sr);
-}
 const PomoAudio = {
-  ctx: null, master: null, noiseSrc: null, padOscs: [], padGain: null, lfo: null, lfoGain: null,
-  restTimer: null, restStep: 0, current: null, volume: 0.7, muted: false, htmlAudio: null, audioURL: null, _blobs: {}, _preview: null, bellHtml: null,
+  ctx: null, master: null, sources: [], timers: [], current: null, volume: 0.7, muted: false, htmlAudio: null, audioURL: null, _blobs: {}, _preview: null,
 
   init() {
     this.volume = app.pomodoro.settings.volume || 0.7;
     this.muted = !app.pomodoro.settings.sound;
-    this.bellHtml = {
-      work: new Audio(bellWav([659.25, 783.99, 1046.50])),
-      rest: new Audio(bellWav([880.00, 659.25, 523.25]))
-    };
-  },
-  unlockBell() {
-    ['work', 'rest'].forEach(k => {
-      const a = this.bellHtml && this.bellHtml[k];
-      if (!a) return;
-      a.volume = 0;
-      const p = a.play();
-      if (p) p.then(() => { a.pause(); a.currentTime = 0; a.volume = this.volume; }).catch(() => {});
-    });
   },
   _ensure() {
     if (!this.ctx) {
@@ -3814,87 +3755,121 @@ const PomoAudio = {
     this._preview = a;
   },
   _startWork(ctx) {
-    const buf = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    let last = 0;
-    for (let i=0;i<data.length;i++){ const w = Math.random()*2-1; last = (last + 0.02*w)/1.02; data[i] = last*3.5; }
-    const noise = ctx.createBufferSource(); noise.buffer = buf; noise.loop = true;
-    const nFilter = ctx.createBiquadFilter(); nFilter.type = 'lowpass'; nFilter.frequency.value = 420;
-    const nGain = ctx.createGain(); nGain.gain.value = 0.14;
-    noise.connect(nFilter); nFilter.connect(nGain); nGain.connect(this.master);
-    noise.start();
-    this.noiseSrc = noise;
+    // 雨声：雨幕底噪 + 高频雨滴 + 随机水滴
+    const sr = ctx.sampleRate;
+    const buf = ctx.createBuffer(1, sr * 2, sr);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1300; lp.Q.value = 0.4;
+    const g = ctx.createGain(); g.gain.value = 0.18;
+    src.connect(lp); lp.connect(g); g.connect(this.master);
+    src.start();
+    this.sources.push(src);
 
-    this.padGain = ctx.createGain();
-    this.padGain.gain.value = 0.05;
-    this.padGain.connect(this.master);
-    this.padOscs = [110, 164.81, 220].map(f => {
+    const hi = ctx.createBuffer(1, sr * 2, sr);
+    const hd = hi.getChannelData(0);
+    for (let i = 0; i < hd.length; i++) hd[i] = Math.random() * 2 - 1;
+    const src2 = ctx.createBufferSource(); src2.buffer = hi; src2.loop = true;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 4000;
+    const g2 = ctx.createGain(); g2.gain.value = 0.05;
+    src2.connect(hp); hp.connect(g2); g2.connect(this.master);
+    src2.start();
+    this.sources.push(src2);
+
+    const drop = () => {
+      if (!this.current) return;
+      const f = 900 + Math.random() * 2600;
       const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
-      o.connect(this.padGain); o.start();
-      return o;
-    });
-    this.lfo = ctx.createOscillator(); this.lfo.frequency.value = 0.08;
-    this.lfoGain = ctx.createGain(); this.lfoGain.gain.value = 0.03;
-    this.lfo.connect(this.lfoGain); this.lfoGain.connect(this.padGain.gain);
-    this.lfo.start();
+      const gg = ctx.createGain();
+      const t = ctx.currentTime;
+      gg.gain.setValueAtTime(0.0001, t);
+      gg.gain.exponentialRampToValueAtTime(0.02 + Math.random() * 0.04, t + 0.004);
+      gg.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      o.connect(gg); gg.connect(this.master);
+      o.start(t); o.stop(t + 0.05);
+    };
+    this.timers.push(setInterval(() => { for (let i = 0; i < 2; i++) drop(); }, 70));
+  },
+  _bird(ctx) {
+    const notes = 2 + Math.floor(Math.random() * 3);
+    const base = 2400 + Math.random() * 1600;
+    for (let i = 0; i < notes; i++) {
+      const t0 = ctx.currentTime + i * 0.09;
+      const f0 = base * (0.85 + Math.random() * 0.4);
+      const f1 = f0 * (0.6 + Math.random() * 0.7);
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(f0, t0);
+      o.frequency.exponentialRampToValueAtTime(f1, t0 + 0.07);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.06, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.1);
+      o.connect(g); g.connect(this.master);
+      o.start(t0); o.stop(t0 + 0.12);
+    }
+  },
+  _cricket(ctx) {
+    const pulses = 3 + Math.floor(Math.random() * 3);
+    const f = 4100 + Math.random() * 800;
+    for (let i = 0; i < pulses; i++) {
+      const t0 = ctx.currentTime + i * 0.055;
+      const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = f;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5600;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.028, t0 + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
+      o.connect(lp); lp.connect(g); g.connect(this.master);
+      o.start(t0); o.stop(t0 + 0.06);
+    }
   },
   _startRest(ctx) {
-    const scale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
-    const pattern = [0,2,4,5,4,2,1,3];
-    this.restStep = 0;
-    const note = () => {
-      const f = scale[pattern[this.restStep % pattern.length]];
-      this._pluck(ctx, f);
-      this.restStep++;
-    };
-    note();
-    this.restTimer = setInterval(note, 460);
+    // 春天：微风底噪 + 随机鸟叫 + 虫鸣
+    const sr = ctx.sampleRate;
+    const buf = ctx.createBuffer(1, sr * 3, sr);
+    const d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 2.2; }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 620; lp.Q.value = 0.3;
+    const g = ctx.createGain(); g.gain.value = 0.05;
+    src.connect(lp); lp.connect(g); g.connect(this.master);
+    src.start();
+    this.sources.push(src);
+
+    this.timers.push(setInterval(() => { if (this.current && Math.random() < 0.55) this._bird(ctx); }, 1700));
+    this.timers.push(setInterval(() => { if (this.current) this._cricket(ctx); }, 1200));
   },
-  _pluck(ctx, freq) {
-    const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
-    const g = ctx.createGain();
-    const t = ctx.currentTime;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
-    o.connect(g); g.connect(this.master);
-    o.start(t); o.stop(t + 0.75);
+  _startWaves(ctx) {
+    // 海浪：棕色噪声低通 + 缓慢浪涌 LFO（循环播放）
+    const sr = ctx.sampleRate;
+    const buf = ctx.createBuffer(1, sr * 4, sr);
+    const d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; last = (last + 0.03 * w) / 1.03; d[i] = last * 3.2; }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 560; lp.Q.value = 0.8;
+    const g = ctx.createGain(); g.gain.value = 0.2;
+    const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.085;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.15;
+    lfo.connect(lfoGain); lfoGain.connect(g.gain);
+    src.connect(lp); lp.connect(g); g.connect(this.master);
+    src.start(); lfo.start();
+    this.sources.push(src, lfo);
   },
-  bell(freq, when, dur, gainVal) {
-    const ctx = this.ctx;
-    const partials = [1, 2.0, 2.98, 4.17, 5.43];
-    const amps = [1, 0.55, 0.36, 0.2, 0.12];
-    partials.forEach((ratio, i) => {
-      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq * ratio;
-      const g = ctx.createGain();
-      const t = when;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(gainVal * amps[i], t + 0.008);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.3, dur - i * 0.1));
-      o.connect(g); g.connect(this.master);
-      o.start(t); o.stop(t + dur + 0.1);
-    });
-  },
-  chime(kind) {
+  alarm() {
     if (this.muted || !app.pomodoro.settings.sound) return;
-    // HTML5 铃声（iOS 上最可靠，静音开关关闭时生效）
-    const a = this.bellHtml && this.bellHtml[kind];
-    if (a) { a.volume = this.volume; a.currentTime = 0; a.play().catch(() => {}); }
-    // Web Audio 铃声（桌面 / Android 备用）
     const ctx = this._ensure();
     if (!ctx) return;
-    if (navigator.vibrate) { try { navigator.vibrate(kind === 'work' ? [300, 120, 300, 120, 300] : [250, 120, 250]); } catch(e) {} }
-    const t0 = ctx.currentTime;
-    const seq = kind === 'work' ? [659.25, 783.99, 1046.50] : [880.00, 659.25, 523.25];
-    seq.forEach((f, i) => this.bell(f, t0 + i * 0.3, 1.8, 0.5));
+    if (navigator.vibrate) { try { navigator.vibrate([300, 120, 300, 120, 300]); } catch(e) {} }
+    this._startWaves(ctx);
   },
   stop() {
-    if (this.noiseSrc) { try{this.noiseSrc.stop();}catch(e){} this.noiseSrc = null; }
-    (this.padOscs||[]).forEach(o=>{ try{o.stop();}catch(e){} }); this.padOscs = [];
-    if (this.lfo) { try{this.lfo.stop();}catch(e){} this.lfo = null; }
-    if (this.restTimer) { clearInterval(this.restTimer); this.restTimer = null; }
-    if (this.htmlAudio) { try { this.htmlAudio.pause(); this.htmlAudio.src = ''; } catch(e){} this.htmlAudio = null; }
-    if (this.audioURL) { try { URL.revokeObjectURL(this.audioURL); } catch(e){} this.audioURL = null; }
+    (this.sources || []).forEach(s => { try { s.stop(); } catch(e) {} }); this.sources = [];
+    (this.timers || []).forEach(t => { clearInterval(t); clearTimeout(t); }); this.timers = [];
+    if (this.htmlAudio) { try { this.htmlAudio.pause(); this.htmlAudio.src = ''; } catch(e) {} this.htmlAudio = null; }
+    if (this.audioURL) { try { URL.revokeObjectURL(this.audioURL); } catch(e) {} this.audioURL = null; }
     this.current = null;
   }
 };
