@@ -504,6 +504,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand-purple);box-sha
   font-family:inherit;transition:all .15s;
 }
 .pomo-phase-tab.active{background:var(--brand-purple);color:#fff;border-color:var(--brand-purple)}
+.pomo-project{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin-bottom:14px}
+.pomo-project-label{font-size:13px;font-weight:600;color:var(--text-secondary)}
+.pomo-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.pomo-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--input-bg);color:var(--text);transition:all .15s;user-select:none}
+.pomo-chip:hover{border-color:var(--brand-purple)}
+.pomo-chip.active{background:var(--brand-purple);color:#fff;border-color:var(--brand-purple)}
+.pomo-chip-count{font-size:10px;background:rgba(0,0,0,.12);border-radius:8px;padding:0 5px;line-height:14px;font-weight:700}
+.pomo-chip.active .pomo-chip-count{background:rgba(255,255,255,.25)}
+.pomo-chip-del{opacity:.45;font-weight:700;padding:0 1px}
+.pomo-chip:hover .pomo-chip-del{opacity:.85}
+.pomo-chip-add{border-style:dashed;color:var(--text-secondary)}
+.pomo-chip-add:hover{color:var(--brand-purple)}
+.pomo-project-current{margin-bottom:12px;font-size:13px;color:var(--text-secondary)}
 .pomo-ring{position:relative;width:180px;height:180px;margin:0 auto 10px}
 .pomo-ring svg{transform:rotate(-90deg)}
 .pomo-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
@@ -3039,11 +3052,13 @@ const POMO_ACHIEVEMENTS = [
 
 function ensurePomodoroData() {
   if (!app.pomodoro) app.pomodoro = {};
-  const d = {settings:{work:25,shortBreak:5,longBreak:15,longBreakEvery:4,sound:true,volume:0.7,autoStart:false,workMusic:null,restMusic:null}, records:[], dog:{name:'旺财'}, achievements:[], active:null};
+  const d = {settings:{work:25,shortBreak:5,longBreak:15,longBreakEvery:4,sound:true,volume:0.7,autoStart:false,workMusic:null,restMusic:null}, records:[], dog:{name:'旺财'}, achievements:[], active:null, projects:['工作','学习','运动'], currentProject:''};
   app.pomodoro.settings = {...d.settings, ...(app.pomodoro.settings||{})};
   app.pomodoro.records = app.pomodoro.records || [];
   app.pomodoro.dog = {...d.dog, ...(app.pomodoro.dog||{})};
   app.pomodoro.achievements = app.pomodoro.achievements || [];
+  app.pomodoro.projects = app.pomodoro.projects || d.projects;
+  if (app.pomodoro.currentProject === undefined) app.pomodoro.currentProject = '';
   if (app.pomodoro.active === undefined) app.pomodoro.active = null;
 }
 
@@ -3091,7 +3106,7 @@ function fmtPomoTime(sec) {
   return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
 }
 function pomoSnapshot() {
-  return pomoState ? {phase:pomoState.phase, running:pomoState.running, remaining:pomoState.remaining, total:pomoState.total, endTime:pomoState.endTime||null, workDone:pomoState.workDone||0} : null;
+  return pomoState ? {phase:pomoState.phase, running:pomoState.running, remaining:pomoState.remaining, total:pomoState.total, endTime:pomoState.endTime||null, workDone:pomoState.workDone||0, project:pomoState.project||''} : null;
 }
 function beginPomoInterval() { stopPomoInterval(); pomoTimer = setInterval(pomoTick, 250); }
 function stopPomoInterval() { if (pomoTimer) { clearInterval(pomoTimer); pomoTimer = null; } }
@@ -3100,14 +3115,14 @@ function selectPomoPhase(phase) {
   stopPomoInterval();
   PomoAudio.stop();
   const total = pomoPhaseSeconds(phase);
-  pomoState = { phase, running:false, remaining:total, total, endTime:null, workDone: pomoState?pomoState.workDone:0 };
+  pomoState = { phase, running:false, remaining:total, total, endTime:null, workDone: pomoState?pomoState.workDone:0, project: phase==='work' ? (app.pomodoro.currentProject||'') : (pomoState?pomoState.project||'' : '') };
   app.pomodoro.active = null;
   persist();
   renderPomodoro();
 }
 
 function togglePomodoro() {
-  if (!pomoState) { pomoState = { phase:'work', running:false, remaining:pomoPhaseSeconds('work'), total:pomoPhaseSeconds('work'), endTime:null, workDone:0 }; }
+  if (!pomoState) { pomoState = { phase:'work', running:false, remaining:pomoPhaseSeconds('work'), total:pomoPhaseSeconds('work'), endTime:null, workDone:0, project: app.pomodoro.currentProject||'' }; }
   if (pomoState.running) { pausePomodoro(); }
   else { startOrResumePomodoro(); }
 }
@@ -3140,7 +3155,7 @@ function resetPomodoro() {
   PomoAudio.stop();
   const phase = pomoState ? pomoState.phase : 'work';
   const total = pomoPhaseSeconds(phase);
-  pomoState = { phase, running:false, remaining:total, total, endTime:null, workDone:0 };
+  pomoState = { phase, running:false, remaining:total, total, endTime:null, workDone:0, project: phase==='work' ? (app.pomodoro.currentProject||'') : '' };
   app.pomodoro.active = null;
   persist();
   renderPomodoro();
@@ -3182,7 +3197,7 @@ function completePomoPhase() {
   } else {
     next = 'work';
   }
-  pomoState = { phase:next, running:false, remaining:pomoPhaseSeconds(next), total:pomoPhaseSeconds(next), endTime:null, workDone:pomoState.workDone||0 };
+  pomoState = { phase:next, running:false, remaining:pomoPhaseSeconds(next), total:pomoPhaseSeconds(next), endTime:null, workDone:pomoState.workDone||0, project: next==='work' ? (app.pomodoro.currentProject||'') : (pomoState.project||'') };
   app.pomodoro.active = null;
   persist();
   renderPomodoro();
@@ -3190,7 +3205,7 @@ function completePomoPhase() {
 }
 
 function recordPomodoro() {
-  app.pomodoro.records.push({date: today(), ts: Date.now()});
+  app.pomodoro.records.push({date: today(), ts: Date.now(), project: (pomoState && pomoState.project) || app.pomodoro.currentProject || '未分类'});
   pomoFeedFlash = Date.now();
   const newly = checkPomoAchievements();
   const meals = pomoToday();
@@ -3269,6 +3284,37 @@ function renameDog() {
     renderPomodoro();
     toast('🐶 已改名：' + app.pomodoro.dog.name);
   }
+}
+
+function selectPomoProject(i) {
+  const p = (app.pomodoro.projects || [])[i];
+  if (p === undefined) return;
+  app.pomodoro.currentProject = p;
+  if (pomoState && pomoState.phase === 'work') pomoState.project = p;
+  persist();
+  renderPomodoro();
+  toast('📌 当前项目：' + p);
+}
+function addPomoProject() {
+  const name = prompt('输入项目名称（如：运动、学习财务管理、会计实务）：');
+  if (!name || !name.trim()) return;
+  const n = name.trim().slice(0, 20);
+  if ((app.pomodoro.projects || []).includes(n)) { toast('⚠️ 项目已存在'); return; }
+  app.pomodoro.projects.push(n);
+  app.pomodoro.currentProject = n;
+  persist();
+  renderPomodoro();
+  toast('✅ 已添加项目：' + n);
+}
+function deletePomoProject(i) {
+  const p = (app.pomodoro.projects || [])[i];
+  if (p === undefined) return;
+  if (!confirm('删除项目「' + p + '」？历史记录不受影响。')) return;
+  app.pomodoro.projects.splice(i, 1);
+  if (app.pomodoro.currentProject === p) app.pomodoro.currentProject = '';
+  persist();
+  renderPomodoro();
+  toast('🗑️ 已删除项目：' + p);
 }
 
 // --- 本地音乐 (IndexedDB 存储音频文件) ---
@@ -3372,6 +3418,11 @@ function renderPomodoro() {
   const dogState = meals>=4 ? 'happy' : (meals>0 ? 'ok' : 'hungry');
   const exp = dogExpInfo();
   const fedFlash = Date.now() - pomoFeedFlash < 1500;
+  const projects = app.pomodoro.projects || [];
+  const curProject = app.pomodoro.currentProject || '';
+  const todayRecs = pomoRecords().filter(r=>r.date===today());
+  const projectToday = {};
+  projects.forEach(p=>projectToday[p] = todayRecs.filter(r=>r.project===p).length);
 
   el.innerHTML = `
     <div class="module-header">🍅 番茄钟</div>
@@ -3382,6 +3433,13 @@ function renderPomodoro() {
     </div>
     <div class="pomo-layout">
       <div class="card pomo-timer-card">
+        <div class="pomo-project">
+          <span class="pomo-project-label">📌 项目</span>
+          <div class="pomo-chips">
+            ${projects.map((p,i)=>`<span class="pomo-chip ${p===curProject?'active':''}" onclick="selectPomoProject(${i})">${escHtml(p)}${projectToday[p]?`<span class="pomo-chip-count">${projectToday[p]}</span>`:''}<span class="pomo-chip-del" onclick="event.stopPropagation();deletePomoProject(${i})" title="删除项目">✕</span></span>`).join('')}
+            <span class="pomo-chip pomo-chip-add" onclick="addPomoProject()">＋ 添加</span>
+          </div>
+        </div>
         <div class="pomo-phase-tabs">
           ${['work','shortBreak','longBreak'].map(p=>`<button class="pomo-phase-tab ${phase===p?'active':''}" onclick="selectPomoPhase('${p}')">${POMO_PHASES[p].icon} ${POMO_PHASES[p].label}</button>`).join('')}
         </div>
@@ -3396,6 +3454,7 @@ function renderPomodoro() {
           </div>
         </div>
         <div class="pomo-phase-label">${POMO_PHASES[phase].icon} ${POMO_PHASES[phase].label}${running?' 进行中…':'（就绪）'}</div>
+        ${phase==='work' && curProject ? `<div class="pomo-project-current">正在专注：<strong>${escHtml(curProject)}</strong></div>` : ''}
         <div class="pomo-controls">
           <button class="pomo-btn pomo-main" onclick="togglePomodoro()">${running?'⏸ 暂停':'▶ 开始'}</button>
           <button class="pomo-btn pomo-sub" onclick="resetPomodoro()">↺ 重置</button>
