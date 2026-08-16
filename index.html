@@ -3142,7 +3142,7 @@ function togglePomodoro() {
 }
 
 function startOrResumePomodoro() {
-  if (PomoAudio.ctx && PomoAudio.ctx.state === 'suspended') PomoAudio.ctx.resume();
+  PomoAudio._ensure();
   pomoState.running = true;
   pomoState.endTime = Date.now() + pomoState.remaining*1000;
   app.pomodoro.active = pomoSnapshot();
@@ -3277,6 +3277,7 @@ function savePomoSettings() {
 }
 function togglePomoSound() {
   app.pomodoro.settings.sound = document.getElementById('setSound').checked;
+  PomoAudio.muted = !app.pomodoro.settings.sound;
   persist();
   if (!app.pomodoro.settings.sound) PomoAudio.stop();
   else if (pomoState && pomoState.running) PomoAudio.play(pomoState.phase==='work'?'work':'rest');
@@ -3801,21 +3802,29 @@ const PomoAudio = {
     o.connect(g); g.connect(this.master);
     o.start(t); o.stop(t + 0.75);
   },
+  bell(freq, when, dur, gainVal) {
+    const ctx = this.ctx;
+    const partials = [1, 2.0, 2.98, 4.17, 5.43];
+    const amps = [1, 0.55, 0.36, 0.2, 0.12];
+    partials.forEach((ratio, i) => {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq * ratio;
+      const g = ctx.createGain();
+      const t = when;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(gainVal * amps[i], t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.3, dur - i * 0.1));
+      o.connect(g); g.connect(this.master);
+      o.start(t); o.stop(t + dur + 0.1);
+    });
+  },
   chime(kind) {
     if (this.muted || !app.pomodoro.settings.sound) return;
     const ctx = this._ensure();
     if (!ctx) return;
-    const freqs = kind === 'work' ? [880, 1108.73, 1318.51] : [659.25, 783.99, 987.77];
-    freqs.forEach((f, i) => {
-      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
-      const g = ctx.createGain();
-      const t = ctx.currentTime + i*0.14;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.28, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
-      o.connect(g); g.connect(this.master);
-      o.start(t); o.stop(t + 0.8);
-    });
+    if (navigator.vibrate) { try { navigator.vibrate(kind === 'work' ? [300, 120, 300, 120, 300] : [250, 120, 250]); } catch(e) {} }
+    const t0 = ctx.currentTime;
+    const seq = kind === 'work' ? [659.25, 783.99, 1046.50] : [880.00, 659.25, 523.25];
+    seq.forEach((f, i) => this.bell(f, t0 + i * 0.3, 1.8, 0.5));
   },
   stop() {
     if (this.noiseSrc) { try{this.noiseSrc.stop();}catch(e){} this.noiseSrc = null; }
