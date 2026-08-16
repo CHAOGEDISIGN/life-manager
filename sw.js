@@ -1,4 +1,4 @@
-const CACHE = 'lifemgr-v4';
+const CACHE = 'lifemgr-v5';
 const PRE = [
   './',
   './index.html',
@@ -39,7 +39,7 @@ self.addEventListener('fetch', evt => {
 
   // For local files, network-first with cache fallback
   evt.respondWith(
-    fetch(evt.request)
+    fetch(evt.request, { cache: 'no-store' })
       .then(res => {
         const clone = res.clone();
         caches.open(CACHE).then(cache => cache.put(evt.request, clone));
