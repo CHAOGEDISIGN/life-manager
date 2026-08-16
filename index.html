@@ -517,6 +517,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand-purple);box-sha
 .pomo-chip-add{border-style:dashed;color:var(--text-secondary)}
 .pomo-chip-add:hover{color:var(--brand-purple)}
 .pomo-project-current{margin-bottom:12px;font-size:13px;color:var(--text-secondary)}
+.goal-list{display:flex;flex-direction:column;gap:12px}
+.goal-row{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px}
+.goal-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.goal-name{font-weight:600;font-size:14px}
+.goal-total{font-size:12px;color:var(--text-secondary)}
+.goal-actions{margin-left:auto;display:flex;gap:6px}
+.goal-bar{height:8px;background:var(--input-bg);border-radius:4px;overflow:hidden;margin-top:10px}
+.goal-bar-fill{height:100%;background:linear-gradient(90deg,var(--brand-purple),var(--brand-indigo));border-radius:4px;transition:width .4s ease}
+.goal-bar-weekly .goal-bar-fill{background:linear-gradient(90deg,var(--orange),#ff9500)}
+.goal-meta{font-size:12px;color:var(--text-secondary);margin-top:6px;line-height:1.5}
+.goal-done{color:var(--green);font-weight:700}
+.goal-none{color:var(--text-tertiary)}
+.goal-hint{margin-top:12px;font-size:12px;color:var(--text-tertiary)}
 .pomo-ring{position:relative;width:180px;height:180px;margin:0 auto 10px}
 .pomo-ring svg{transform:rotate(-90deg)}
 .pomo-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
@@ -3052,12 +3065,13 @@ const POMO_ACHIEVEMENTS = [
 
 function ensurePomodoroData() {
   if (!app.pomodoro) app.pomodoro = {};
-  const d = {settings:{work:25,shortBreak:5,longBreak:15,longBreakEvery:4,sound:true,volume:0.7,autoStart:false,workMusic:null,restMusic:null}, records:[], dog:{name:'旺财'}, achievements:[], active:null, projects:['工作','学习','运动'], currentProject:''};
+  const d = {settings:{work:25,shortBreak:5,longBreak:15,longBreakEvery:4,sound:true,volume:0.7,autoStart:false,workMusic:null,restMusic:null}, records:[], dog:{name:'旺财'}, achievements:[], active:null, projects:['工作','学习','运动'], currentProject:'', goals:{}};
   app.pomodoro.settings = {...d.settings, ...(app.pomodoro.settings||{})};
   app.pomodoro.records = app.pomodoro.records || [];
   app.pomodoro.dog = {...d.dog, ...(app.pomodoro.dog||{})};
   app.pomodoro.achievements = app.pomodoro.achievements || [];
   app.pomodoro.projects = app.pomodoro.projects || d.projects;
+  app.pomodoro.goals = app.pomodoro.goals || {};
   if (app.pomodoro.currentProject === undefined) app.pomodoro.currentProject = '';
   if (app.pomodoro.active === undefined) app.pomodoro.active = null;
 }
@@ -3312,9 +3326,60 @@ function deletePomoProject(i) {
   if (!confirm('删除项目「' + p + '」？历史记录不受影响。')) return;
   app.pomodoro.projects.splice(i, 1);
   if (app.pomodoro.currentProject === p) app.pomodoro.currentProject = '';
+  delete app.pomodoro.goals[p];
   persist();
   renderPomodoro();
   toast('🗑️ 已删除项目：' + p);
+}
+
+function parseGoalInput(str) {
+  if (!str) return null;
+  str = String(str).trim();
+  if (!str) return null;
+  const mins = app.pomodoro.settings.work || 25;
+  if (/[hH小时]$/.test(str)) {
+    const n = parseFloat(str.replace(/[hH小时]/g, ''));
+    if (isNaN(n) || n <= 0) return null;
+    return Math.round(n * 60 / mins);
+  }
+  const n = parseFloat(str);
+  if (isNaN(n) || n <= 0) return null;
+  return Math.round(n);
+}
+function fmtPomoHours(n) {
+  const h = n * (app.pomodoro.settings.work || 25) / 60;
+  return (Math.round(h * 10) / 10) + ' 小时';
+}
+function editProjectGoal(i) {
+  const p = (app.pomodoro.projects || [])[i];
+  if (p === undefined) return;
+  const g = (app.pomodoro.goals || {})[p] || {};
+  const mins = app.pomodoro.settings.work || 25;
+  const perHourTxt = String(Math.round((60 / mins) * 10) / 10);
+  const target = prompt(`设置「${p}」总目标：\n可输入番茄数（如 800），或小时数（如 200h / 200小时）\n\n1 个番茄 = ${mins} 分钟，1 小时 ≈ ${perHourTxt} 个番茄\n\n留空 = 不设总目标`, g.target ? String(g.target) : '');
+  if (target === null) return;
+  const weekly = prompt(`设置「${p}」每周目标番茄数：\n\n留空 = 不设周目标`, g.weekly ? String(g.weekly) : '');
+  if (weekly === null) return;
+  const t = target.trim() ? parseGoalInput(target) : null;
+  const w = weekly.trim() ? parseGoalInput(weekly) : null;
+  if (target.trim() && t === null) { toast('⚠️ 总目标格式不正确'); return; }
+  if (weekly.trim() && w === null) { toast('⚠️ 周目标格式不正确'); return; }
+  const goal = {};
+  if (t !== null) goal.target = t;
+  if (w !== null) goal.weekly = w;
+  if (goal.target || goal.weekly) app.pomodoro.goals[p] = goal;
+  else delete app.pomodoro.goals[p];
+  persist();
+  renderPomodoro();
+  toast('🎯 已保存目标：' + p);
+}
+function removeProjectGoal(i) {
+  const p = (app.pomodoro.projects || [])[i];
+  if (p === undefined) return;
+  delete app.pomodoro.goals[p];
+  persist();
+  renderPomodoro();
+  toast('🗑️ 已清除目标：' + p);
 }
 
 // --- 本地音乐 (IndexedDB 存储音频文件) ---
@@ -3423,6 +3488,38 @@ function renderPomodoro() {
   const todayRecs = pomoRecords().filter(r=>r.date===today());
   const projectToday = {};
   projects.forEach(p=>projectToday[p] = todayRecs.filter(r=>r.project===p).length);
+  const weekSet = new Set(getWeekDays());
+  const totalByP = {}, weekByP = {};
+  pomoRecords().forEach(r=>{ const p = r.project || '未分类'; totalByP[p] = (totalByP[p]||0)+1; if (weekSet.has(r.date)) weekByP[p] = (weekByP[p]||0)+1; });
+  const goalRows = projects.map((p,i)=>{
+    const total = totalByP[p] || 0;
+    const week = weekByP[p] || 0;
+    const g = (app.pomodoro.goals || {})[p];
+    const hasGoal = !!(g && (g.target || g.weekly));
+    let body = '';
+    if (g && g.target) {
+      const rem = Math.max(0, g.target - total);
+      const pct = Math.min(100, Math.round(total / g.target * 100));
+      body += `<div class="goal-bar"><div class="goal-bar-fill" style="width:${pct}%"></div></div><div class="goal-meta">总目标 ${total} / ${g.target} 番茄 · 剩余 <b>${rem}</b> 番茄（约 ${fmtPomoHours(rem)}）</div>`;
+    }
+    if (g && g.weekly) {
+      const remW = Math.max(0, g.weekly - week);
+      const pctW = Math.min(100, Math.round(week / g.weekly * 100));
+      body += `<div class="goal-bar goal-bar-weekly"><div class="goal-bar-fill" style="width:${pctW}%"></div></div><div class="goal-meta">本周 ${week} / ${g.weekly} 番茄 ${week >= g.weekly ? '<span class="goal-done">✅ 已达标</span>' : `· 还差 ${remW} 个`}</div>`;
+    }
+    if (!hasGoal) body = `<div class="goal-meta goal-none">未设置目标 · 累计 ${total} 番茄</div>`;
+    return `<div class="goal-row">
+      <div class="goal-head">
+        <span class="goal-name">📌 ${escHtml(p)}</span>
+        <span class="goal-total">累计 ${total} 番茄</span>
+        <span class="goal-actions">
+          <button class="btn btn-xs btn-outline" onclick="editProjectGoal(${i})">${hasGoal ? '✏️ 编辑' : '＋ 设目标'}</button>
+          ${hasGoal ? `<button class="btn btn-xs btn-outline" onclick="removeProjectGoal(${i})">清除</button>` : ''}
+        </span>
+      </div>
+      ${body}
+    </div>`;
+  }).join('');
 
   el.innerHTML = `
     <div class="module-header">🍅 番茄钟</div>
@@ -3430,6 +3527,11 @@ function renderPomodoro() {
       <div class="stat-card purple"><div class="stat-value">${meals}</div><div class="stat-label">今日番茄</div></div>
       <div class="stat-card orange"><div class="stat-value">${pomoStreak()}</div><div class="stat-label">连续天数</div></div>
       <div class="stat-card green"><div class="stat-value">${pomoTotal()}</div><div class="stat-label">累计番茄</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎯 专注目标</div>
+      <div class="goal-list">${goalRows}</div>
+      <div class="goal-hint">💡 设目标时可输入番茄数（如 800）或小时数（如 200h）。1 个番茄 = ${s.work} 分钟，1 小时 ≈ ${(60/s.work).toFixed(1)} 个番茄；留空即清除。</div>
     </div>
     <div class="pomo-layout">
       <div class="card pomo-timer-card">
