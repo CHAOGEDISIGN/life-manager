@@ -1,4 +1,4 @@
-const CACHE = 'lifemgr-v2';
+const CACHE = 'lifemgr-v4';
 const PRE = [
   './',
   './index.html',

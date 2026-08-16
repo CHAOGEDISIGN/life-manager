@@ -494,6 +494,81 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand-purple);box-sha
 .exif-row{display:flex;gap:8px;flex-wrap:wrap}
 .exif-row input{width:90px;font-size:12px;padding:7px 10px}
 
+/* Pomodoro */
+.pomo-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.pomo-timer-card{text-align:center}
+.pomo-phase-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.pomo-phase-tab{
+  padding:7px 16px;border-radius:20px;font-size:13px;cursor:pointer;
+  border:1px solid var(--border);background:var(--card-bg);color:var(--text);
+  font-family:inherit;transition:all .15s;
+}
+.pomo-phase-tab.active{background:var(--brand-purple);color:#fff;border-color:var(--brand-purple)}
+.pomo-ring{position:relative;width:180px;height:180px;margin:0 auto 10px}
+.pomo-ring svg{transform:rotate(-90deg)}
+.pomo-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.pomo-time{font-size:42px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+.pomo-pct{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.pomo-phase-label{font-size:14px;font-weight:600;margin-bottom:14px}
+.pomo-controls{display:flex;gap:10px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.pomo-btn{padding:12px 28px;border-radius:24px;font-size:15px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.pomo-main{background:var(--brand-purple);color:#fff;min-width:120px}
+.pomo-main:hover{filter:brightness(1.1)}
+.pomo-sub{background:var(--input-bg);color:var(--text)}
+.pomo-sub:hover{background:var(--hover)}
+.pomo-next-hint{margin-top:12px;font-size:13px;color:var(--text-secondary)}
+
+/* Dog */
+.dog-card{text-align:center;position:relative;overflow:hidden}
+.dog-stage{position:relative;height:184px;display:flex;align-items:center;justify-content:center;margin:4px 0}
+.dog-svg{width:190px;max-width:100%}
+.dog-tail{transform-origin:left center;transform-box:fill-box}
+.dog-svg.wag .dog-tail{animation:dogWag .4s infinite alternate ease-in-out}
+@keyframes dogWag{from{transform:rotate(-8deg)}to{transform:rotate(12deg)}}
+.dog-card.dog-fed .dog-svg{animation:dogBounce .6s ease}
+@keyframes dogBounce{0%{transform:translateY(0)}30%{transform:translateY(-14px) scale(1.05)}60%{transform:translateY(0)}80%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+.dog-name{font-weight:700;font-size:17px}
+.dog-meta{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.dog-exp-bar{height:8px;background:var(--input-bg);border-radius:4px;margin:10px auto 4px;overflow:hidden;max-width:220px}
+.dog-exp-fill{height:100%;background:linear-gradient(90deg,var(--brand-purple),var(--brand-indigo));border-radius:4px;transition:width .4s ease}
+.dog-exp-text{font-size:11px;color:var(--text-tertiary)}
+.dog-bowl-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dog-bowl{font-size:26px}
+.dog-dots{display:flex;gap:5px}
+.dog-dot{width:26px;height:26px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--input-bg)}
+.dog-dot.full{border-style:solid;border-color:var(--orange);background:rgba(255,149,0,.15)}
+.dog-bowl-label{font-size:13px;font-weight:600;color:var(--text-secondary)}
+.dog-tip{margin-top:12px;font-size:12px;color:var(--text-secondary);background:var(--input-bg);border-radius:10px;padding:8px 12px}
+.dog-feed-float{position:absolute;top:16px;right:18px;font-size:24px;font-weight:700;color:var(--orange);animation:dogFloatUp 1.2s ease forwards;pointer-events:none}
+@keyframes dogFloatUp{0%{opacity:0;transform:translateY(10px)}20%{opacity:1}100%{opacity:0;transform:translateY(-30px)}}
+
+/* Pomodoro settings */
+.pomo-settings{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.pomo-settings label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary)}
+.pomo-settings input[type=number]{width:64px;text-align:center;padding:6px 8px}
+.pomo-settings-2{margin-top:12px}
+.pomo-toggle{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.pomo-toggle input{width:auto}
+.pomo-toggle input[type=checkbox]{width:auto;accent-color:var(--brand-purple)}
+.pomo-vol{display:flex;align-items:center;gap:8px}
+.pomo-vol input[type=range]{width:140px;padding:0;border:none;background:transparent}
+
+/* Music upload */
+.music-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.music-row:last-child{border-bottom:none}
+.music-label{font-size:13px;font-weight:600;min-width:80px}
+.music-name{flex:1;min-width:120px;font-size:13px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.music-hint{margin-top:10px;font-size:12px;color:var(--text-tertiary)}
+
+/* Achievements */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.ach-item{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;transition:all .2s}
+.ach-item.locked{opacity:.5;filter:grayscale(1)}
+.ach-item.unlocked{border-color:var(--brand-purple);background:var(--active)}
+.ach-icon{font-size:28px}
+.ach-name{font-weight:600;font-size:13px;margin-top:4px}
+.ach-desc{font-size:11px;color:var(--text-secondary);margin-top:2px;line-height:1.4}
+
 /* Responsive */
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%)}
@@ -503,6 +578,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand-purple);box-sha
   .sidebar-overlay.open{display:block}
   .module-header{font-size:20px}
   .two-col{grid-template-columns:1fr}
+  .pomo-layout{grid-template-columns:1fr}
   .stats-row{grid-template-columns:repeat(2,1fr)}
   .finance-summary{grid-template-columns:repeat(3,1fr)}
   .category-grid{grid-template-columns:repeat(4,1fr)}
@@ -579,6 +655,13 @@ const DEFAULT_DATA = {
   accountingNotes: {practice:'',finance_mgmt:'',law:''},
   workMemos: [],
   photos: [],
+  pomodoro: {
+    settings: { work: 25, shortBreak: 5, longBreak: 15, longBreakEvery: 4, sound: true, volume: 0.7, autoStart: false, workMusic: null, restMusic: null },
+    records: [],
+    dog: { name: '旺财' },
+    achievements: [],
+    active: null
+  },
   theme: 'light'
 };
 
@@ -651,6 +734,7 @@ function getChartColors() {
 // ==================== NAVIGATION ====================
 const modules = [
   {id:'plan',icon:'📋',label:'每日计划'},
+  {id:'pomodoro',icon:'🍅',label:'番茄钟'},
   {id:'diet',icon:'🥗',label:'饮食记录'},
   {id:'exercise',icon:'🏃',label:'运动打卡'},
   {id:'finance',icon:'💰',label:'记账存钱'},
@@ -2813,6 +2897,8 @@ function openWeeklyAnalysis() {
   const weekMemos = (app.workMemos||[]).filter(m=>m.date>=ws&&m.date<=todayStr);
   const totalMemos = (app.workMemos||[]).length;
   const pinnedMemos = (app.workMemos||[]).filter(m=>m.pinned).length;
+  const weekPomos = (app.pomodoro.records||[]).filter(r=>r.date>=ws&&r.date<=todayStr).length;
+  const totalPomos = (app.pomodoro.records||[]).length;
 
   const todoDone = weekTodos.filter(t=>t.done).length;
   const todoTotal = weekTodos.length;
@@ -2839,6 +2925,10 @@ function openWeeklyAnalysis() {
 
   if (engCount >= app.englishGoal * 5) insights.push({icon:'📝',text:`本周学习 ${engCount} 个单词，超额完成任务，太厉害了！`});
   else if (engCount > 0) insights.push({icon:'📖',text:`本周学习 ${engCount} 个单词，坚持每天学习会进步更快。`});
+
+  if (weekPomos >= 20) insights.push({icon:'🍅',text:`本周完成 ${weekPomos} 个番茄，专注力满分，狗狗吃得饱饱的！`});
+  else if (weekPomos > 0) insights.push({icon:'🐶',text:`本周完成 ${weekPomos} 个番茄，继续投喂你的狗狗哦！`});
+  else insights.push({icon:'⏳',text:'本周还没有番茄记录，去番茄钟里专注 25 分钟试试吧！'});
 
   if (weekMoods.length >= 5 && avgMood >= 4) insights.push({icon:'😊',text:'本周心情整体不错，保持积极心态！'});
   else if (weekMoods.length > 0 && avgMood < 3) insights.push({icon:'💙',text:'本周情绪偏低，记得给自己一些放松的时间。'});
@@ -2874,6 +2964,10 @@ function openWeeklyAnalysis() {
     <div class="modal-section">
       <h4>🗒️ 工作备忘</h4>
       <p>本周新增 ${weekMemos.length} 条备忘 | 累计 ${totalMemos} 条${pinnedMemos>0?` | ${pinnedMemos} 条置顶`:''}</p>
+    </div>
+    <div class="modal-section">
+      <h4>🍅 番茄专注</h4>
+      <p>本周 ${weekPomos} 个 | 累计 ${totalPomos} 个 | 连续 ${pomoStreak()} 天 | 今日 ${pomoToday()} 个</p>
     </div>
     <div class="modal-section">
       <h4>📷 摄影日志</h4>
@@ -2921,6 +3015,658 @@ function importData(event) {
   event.target.value = '';
 }
 
+// ==================== POMODORO (番茄钟) ====================
+const POMO_PHASES = {
+  work: {label:'工作', icon:'🍅'},
+  shortBreak: {label:'短休息', icon:'☕'},
+  longBreak: {label:'长休息', icon:'🛋️'}
+};
+const DOG_LEVELS = [0, 10, 25, 50, 100, 200, 400, 800, 1500, 3000];
+const POMO_ACHIEVEMENTS = [
+  {id:'first', icon:'🐾', name:'初次相遇', desc:'完成第 1 个番茄', cond:()=>pomoTotal()>=1},
+  {id:'five', icon:'🍅', name:'番茄新秀', desc:'累计完成 5 个番茄', cond:()=>pomoTotal()>=5},
+  {id:'twentyfive', icon:'🔥', name:'专注达人', desc:'累计完成 25 个番茄', cond:()=>pomoTotal()>=25},
+  {id:'hundred', icon:'💯', name:'百炼成钢', desc:'累计完成 100 个番茄', cond:()=>pomoTotal()>=100},
+  {id:'fivehundred', icon:'🏆', name:'番茄大师', desc:'累计完成 500 个番茄', cond:()=>pomoTotal()>=500},
+  {id:'daily4', icon:'🥣', name:'今日喂饱', desc:'单日完成 4 个番茄，喂饱狗狗', cond:()=>pomoToday()>=4},
+  {id:'daily8', icon:'🌟', name:'超额投喂', desc:'单日完成 8 个番茄', cond:()=>pomoToday()>=8},
+  {id:'daily12', icon:'🚀', name:'疯狂专注', desc:'单日完成 12 个番茄', cond:()=>pomoToday()>=12},
+  {id:'streak7', icon:'📅', name:'一周坚持', desc:'连续 7 天都有番茄', cond:()=>pomoStreak()>=7},
+  {id:'streak30', icon:'💪', name:'月度达人', desc:'连续 30 天都有番茄', cond:()=>pomoStreak()>=30},
+  {id:'dog2', icon:'🐕', name:'狗狗成长', desc:'狗狗升到 2 级', cond:()=>dogLevel()>=2},
+  {id:'dog5', icon:'👑', name:'狗狗王者', desc:'狗狗升到 5 级', cond:()=>dogLevel()>=5},
+];
+
+function ensurePomodoroData() {
+  if (!app.pomodoro) app.pomodoro = {};
+  const d = {settings:{work:25,shortBreak:5,longBreak:15,longBreakEvery:4,sound:true,volume:0.7,autoStart:false,workMusic:null,restMusic:null}, records:[], dog:{name:'旺财'}, achievements:[], active:null};
+  app.pomodoro.settings = {...d.settings, ...(app.pomodoro.settings||{})};
+  app.pomodoro.records = app.pomodoro.records || [];
+  app.pomodoro.dog = {...d.dog, ...(app.pomodoro.dog||{})};
+  app.pomodoro.achievements = app.pomodoro.achievements || [];
+  if (app.pomodoro.active === undefined) app.pomodoro.active = null;
+}
+
+// --- derived stats ---
+function pomoRecords() { return app.pomodoro.records || []; }
+function pomoTotal() { return pomoRecords().length; }
+function pomoToday() { return pomoRecords().filter(r=>r.date===today()).length; }
+function dogName() { return (app.pomodoro.dog && app.pomodoro.dog.name) || '旺财'; }
+function dogLevel() {
+  const t = pomoTotal(); let lvl = 1;
+  for (let i=0;i<DOG_LEVELS.length;i++){ if (t>=DOG_LEVELS[i]) lvl = i+1; }
+  return lvl;
+}
+function dogExpInfo() {
+  const t = pomoTotal(), lvl = dogLevel();
+  const cur = DOG_LEVELS[lvl-1]||0, next = DOG_LEVELS[lvl];
+  return {lvl, cur, next, total:t, pct: next ? Math.min(100, Math.round((t-cur)/(next-cur)*100)) : 100};
+}
+function pomoStreak() {
+  const dates = new Set(pomoRecords().map(r=>r.date));
+  let streak = 0;
+  const now = new Date();
+  const cur = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  if (!dates.has(today())) cur.setUTCDate(cur.getUTCDate()-1);
+  while (dates.has(cur.toISOString().split('T')[0])) { streak++; cur.setUTCDate(cur.getUTCDate()-1); }
+  return streak;
+}
+function pomoWeekCounts() {
+  return getWeekDays().map(d=>pomoRecords().filter(r=>r.date===d).length);
+}
+
+// --- timer state ---
+let pomoState = null;
+let pomoTimer = null;
+let pomoFeedFlash = 0;
+
+function pomoPhaseSeconds(phase) {
+  const s = app.pomodoro.settings;
+  if (phase === 'work') return Math.max(1, s.work)*60;
+  if (phase === 'shortBreak') return Math.max(1, s.shortBreak)*60;
+  return Math.max(1, s.longBreak)*60;
+}
+function fmtPomoTime(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
+}
+function pomoSnapshot() {
+  return pomoState ? {phase:pomoState.phase, running:pomoState.running, remaining:pomoState.remaining, total:pomoState.total, endTime:pomoState.endTime||null, workDone:pomoState.workDone||0} : null;
+}
+function beginPomoInterval() { stopPomoInterval(); pomoTimer = setInterval(pomoTick, 250); }
+function stopPomoInterval() { if (pomoTimer) { clearInterval(pomoTimer); pomoTimer = null; } }
+
+function selectPomoPhase(phase) {
+  stopPomoInterval();
+  PomoAudio.stop();
+  const total = pomoPhaseSeconds(phase);
+  pomoState = { phase, running:false, remaining:total, total, endTime:null, workDone: pomoState?pomoState.workDone:0 };
+  app.pomodoro.active = null;
+  persist();
+  renderPomodoro();
+}
+
+function togglePomodoro() {
+  if (!pomoState) { pomoState = { phase:'work', running:false, remaining:pomoPhaseSeconds('work'), total:pomoPhaseSeconds('work'), endTime:null, workDone:0 }; }
+  if (pomoState.running) { pausePomodoro(); }
+  else { startOrResumePomodoro(); }
+}
+
+function startOrResumePomodoro() {
+  if (PomoAudio.ctx && PomoAudio.ctx.state === 'suspended') PomoAudio.ctx.resume();
+  pomoState.running = true;
+  pomoState.endTime = Date.now() + pomoState.remaining*1000;
+  app.pomodoro.active = pomoSnapshot();
+  persist();
+  PomoAudio.play(pomoState.phase === 'work' ? 'work' : 'rest');
+  beginPomoInterval();
+  renderPomodoro();
+}
+
+function pausePomodoro() {
+  if (!pomoState || !pomoState.running) return;
+  pomoState.remaining = Math.max(0, (pomoState.endTime - Date.now())/1000);
+  pomoState.running = false;
+  pomoState.endTime = null;
+  stopPomoInterval();
+  PomoAudio.stop();
+  app.pomodoro.active = pomoSnapshot();
+  persist();
+  renderPomodoro();
+}
+
+function resetPomodoro() {
+  stopPomoInterval();
+  PomoAudio.stop();
+  const phase = pomoState ? pomoState.phase : 'work';
+  const total = pomoPhaseSeconds(phase);
+  pomoState = { phase, running:false, remaining:total, total, endTime:null, workDone:0 };
+  app.pomodoro.active = null;
+  persist();
+  renderPomodoro();
+}
+
+function pomoTick() {
+  if (!pomoState || !pomoState.running) return;
+  const rem = (pomoState.endTime - Date.now())/1000;
+  if (rem <= 0) { pomoState.remaining = 0; completePomoPhase(); return; }
+  pomoState.remaining = rem;
+  updatePomoDisplay();
+}
+
+function updatePomoDisplay() {
+  if (!pomoState) return;
+  const el = document.getElementById('pomoTime');
+  if (el) el.textContent = fmtPomoTime(Math.max(0, Math.ceil(pomoState.remaining)));
+  const pct = document.getElementById('pomoPct');
+  if (pct && pomoState.total) pct.textContent = Math.round(Math.max(0,pomoState.remaining)/pomoState.total*100) + '%';
+  const ring = document.getElementById('pomoRingFg');
+  if (ring && pomoState.total) {
+    const C = 2*Math.PI*72;
+    const frac = Math.max(0, pomoState.remaining)/pomoState.total;
+    ring.setAttribute('stroke-dasharray', C);
+    ring.setAttribute('stroke-dashoffset', (C - frac*C).toFixed(2));
+  }
+}
+
+function completePomoPhase() {
+  const finished = pomoState.phase;
+  stopPomoInterval();
+  PomoAudio.stop();
+  PomoAudio.chime(finished === 'work' ? 'work' : 'rest');
+  let next;
+  if (finished === 'work') {
+    recordPomodoro();
+    pomoState.workDone = (pomoState.workDone||0) + 1;
+    next = (pomoState.workDone % app.pomodoro.settings.longBreakEvery === 0) ? 'longBreak' : 'shortBreak';
+  } else {
+    next = 'work';
+  }
+  pomoState = { phase:next, running:false, remaining:pomoPhaseSeconds(next), total:pomoPhaseSeconds(next), endTime:null, workDone:pomoState.workDone||0 };
+  app.pomodoro.active = null;
+  persist();
+  renderPomodoro();
+  if (app.pomodoro.settings.autoStart) startOrResumePomodoro();
+}
+
+function recordPomodoro() {
+  app.pomodoro.records.push({date: today(), ts: Date.now()});
+  pomoFeedFlash = Date.now();
+  const newly = checkPomoAchievements();
+  const meals = pomoToday();
+  if (meals < 4) toast(`🍅 完成 1 个番茄！🐶 ${dogName()} 吃到第 ${meals} 顿，还差 ${4-meals} 顿喂饱`);
+  else if (meals === 4) toast(`🥣 ${dogName()} 今天吃饱啦！太棒了！`);
+  else toast(`🍅 完成 1 个番茄！今日第 ${meals} 个，超额投喂中~`);
+  newly.forEach(a=>setTimeout(()=>toast(`🏅 解锁成就：${a.icon} ${a.name}`), 350));
+}
+
+function checkPomoAchievements() {
+  const unlocked = app.pomodoro.achievements;
+  const newly = [];
+  POMO_ACHIEVEMENTS.forEach(a=>{
+    if (!unlocked.includes(a.id) && a.cond()) { unlocked.push(a.id); newly.push(a); }
+  });
+  return newly;
+}
+
+function restorePomodoro() {
+  const a = app.pomodoro.active;
+  if (!a) { pomoState = null; return; }
+  if (a.running && a.endTime) {
+    const rem = (a.endTime - Date.now())/1000;
+    if (rem <= 0) {
+      pomoState = {...a, running:false, remaining:0, endTime:null};
+      app.pomodoro.active = null; persist();
+    } else {
+      pomoState = {...a, remaining:rem, endTime: Date.now()+rem*1000};
+      beginPomoInterval();
+      if (app.pomodoro.settings.sound && PomoAudio.ctx && PomoAudio.ctx.state === 'running') PomoAudio.play(pomoState.phase==='work'?'work':'rest');
+    }
+  } else {
+    pomoState = {...a, running:false, endTime:null};
+  }
+}
+
+// --- settings ---
+function savePomoSettings() {
+  const s = app.pomodoro.settings;
+  const w = parseInt(document.getElementById('setWork').value)||25;
+  const sh = parseInt(document.getElementById('setShort').value)||5;
+  const lo = parseInt(document.getElementById('setLong').value)||15;
+  const ev = parseInt(document.getElementById('setEvery').value)||4;
+  s.work = Math.max(1, Math.min(120, w));
+  s.shortBreak = Math.max(1, Math.min(60, sh));
+  s.longBreak = Math.max(1, Math.min(90, lo));
+  s.longBreakEvery = Math.max(1, Math.min(10, ev));
+  if (pomoState && !pomoState.running) {
+    pomoState.total = pomoPhaseSeconds(pomoState.phase);
+    pomoState.remaining = pomoState.total;
+  }
+  persist();
+  toast('💾 番茄设置已保存');
+  renderPomodoro();
+}
+function togglePomoSound() {
+  app.pomodoro.settings.sound = document.getElementById('setSound').checked;
+  persist();
+  if (!app.pomodoro.settings.sound) PomoAudio.stop();
+  else if (pomoState && pomoState.running) PomoAudio.play(pomoState.phase==='work'?'work':'rest');
+}
+function togglePomoAuto() {
+  app.pomodoro.settings.autoStart = document.getElementById('setAuto').checked;
+  persist();
+}
+function changePomoVolume(v) {
+  app.pomodoro.settings.volume = parseFloat(v);
+  PomoAudio.setVolume(parseFloat(v));
+  persist();
+}
+function renameDog() {
+  const name = prompt('给狗狗起个新名字：', dogName());
+  if (name && name.trim()) {
+    app.pomodoro.dog.name = name.trim().slice(0,12);
+    persist();
+    renderPomodoro();
+    toast('🐶 已改名：' + app.pomodoro.dog.name);
+  }
+}
+
+// --- 本地音乐 (IndexedDB 存储音频文件) ---
+const MusicDB = {
+  _db: null,
+  _open() {
+    return new Promise((resolve, reject) => {
+      if (this._db) return resolve(this._db);
+      if (!window.indexedDB) return reject(new Error('IndexedDB 不可用'));
+      const req = indexedDB.open('lifeManagerMusic', 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore('music'); };
+      req.onsuccess = () => { this._db = req.result; resolve(this._db); };
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async save(key, blob) {
+    const db = await this._open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('music', 'readwrite');
+      tx.objectStore('music').put(blob, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  },
+  async get(key) {
+    const db = await this._open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('music', 'readonly');
+      const req = tx.objectStore('music').get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async remove(key) {
+    const db = await this._open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('music', 'readwrite');
+      tx.objectStore('music').delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+};
+
+function currentPomoAudioMode() {
+  return (pomoState && pomoState.phase === 'work') ? 'work' : 'rest';
+}
+
+function uploadMusic(mode) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'audio/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      await MusicDB.save(mode, file);
+    } catch(err) {
+      toast('⚠️ 保存失败：浏览器不支持或存储空间不足');
+      return;
+    }
+    app.pomodoro.settings[mode === 'work' ? 'workMusic' : 'restMusic'] = {name: file.name, size: file.size};
+    PomoAudio._blobs[mode] = file;
+    persist();
+    toast('🎵 已设置' + (mode === 'work' ? '工作' : '休息') + '音乐：' + file.name);
+    if (pomoState && pomoState.running && currentPomoAudioMode() === mode) PomoAudio.play(mode);
+    renderPomodoro();
+  };
+  input.click();
+}
+
+function previewMusic(mode) { PomoAudio.preview(mode); }
+
+async function removeMusic(mode) {
+  try { await MusicDB.remove(mode); } catch(e) {}
+  if (mode === 'work') app.pomodoro.settings.workMusic = null;
+  else app.pomodoro.settings.restMusic = null;
+  PomoAudio._blobs[mode] = null;
+  persist();
+  toast('🎵 已恢复内置' + (mode === 'work' ? '专注' : '放松') + '音效');
+  if (pomoState && pomoState.running && currentPomoAudioMode() === mode) PomoAudio.play(mode);
+  renderPomodoro();
+}
+
+// --- render ---
+function renderPomodoro() {
+  const el = document.getElementById('mod-pomodoro');
+  if (!el) return;
+  ensurePomodoroData();
+  const s = app.pomodoro.settings;
+  const phase = pomoState ? pomoState.phase : 'work';
+  const running = pomoState && pomoState.running;
+  const remaining = pomoState ? Math.ceil(pomoState.remaining) : pomoPhaseSeconds(phase);
+  const total = pomoState ? pomoState.total : pomoPhaseSeconds(phase);
+  const pct = total>0 ? Math.round(remaining/total*100) : 0;
+  const ringColor = phase==='work' ? 'var(--brand-purple)' : 'var(--green)';
+  const C = 2*Math.PI*72;
+  const offset = (C - (remaining/total)*C).toFixed(2);
+  const meals = pomoToday();
+  const fed = meals >= 4;
+  const dogState = meals>=4 ? 'happy' : (meals>0 ? 'ok' : 'hungry');
+  const exp = dogExpInfo();
+  const fedFlash = Date.now() - pomoFeedFlash < 1500;
+
+  el.innerHTML = `
+    <div class="module-header">🍅 番茄钟</div>
+    <div class="stats-row">
+      <div class="stat-card purple"><div class="stat-value">${meals}</div><div class="stat-label">今日番茄</div></div>
+      <div class="stat-card orange"><div class="stat-value">${pomoStreak()}</div><div class="stat-label">连续天数</div></div>
+      <div class="stat-card green"><div class="stat-value">${pomoTotal()}</div><div class="stat-label">累计番茄</div></div>
+    </div>
+    <div class="pomo-layout">
+      <div class="card pomo-timer-card">
+        <div class="pomo-phase-tabs">
+          ${['work','shortBreak','longBreak'].map(p=>`<button class="pomo-phase-tab ${phase===p?'active':''}" onclick="selectPomoPhase('${p}')">${POMO_PHASES[p].icon} ${POMO_PHASES[p].label}</button>`).join('')}
+        </div>
+        <div class="pomo-ring">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <circle cx="90" cy="90" r="72" fill="none" stroke="var(--input-bg)" stroke-width="10"/>
+            <circle id="pomoRingFg" cx="90" cy="90" r="72" fill="none" stroke="${ringColor}" stroke-width="10" stroke-dasharray="${C}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+          </svg>
+          <div class="pomo-ring-center">
+            <div class="pomo-time" id="pomoTime">${fmtPomoTime(remaining)}</div>
+            <div class="pomo-pct" id="pomoPct">${pct}%</div>
+          </div>
+        </div>
+        <div class="pomo-phase-label">${POMO_PHASES[phase].icon} ${POMO_PHASES[phase].label}${running?' 进行中…':'（就绪）'}</div>
+        <div class="pomo-controls">
+          <button class="pomo-btn pomo-main" onclick="togglePomodoro()">${running?'⏸ 暂停':'▶ 开始'}</button>
+          <button class="pomo-btn pomo-sub" onclick="resetPomodoro()">↺ 重置</button>
+        </div>
+        ${pomoState && pomoState.workDone>0 && !running && phase==='work' ? `<div class="pomo-next-hint">已完成 ${pomoState.workDone} 个番茄，继续专注！</div>` : ''}
+      </div>
+      <div class="card dog-card ${fedFlash?'dog-fed':''}">
+        <div class="card-title">🐶 我的狗狗 · ${escHtml(dogName())}</div>
+        ${renderDogSVG(dogState)}
+        <div class="dog-meta">Lv.${exp.lvl} · 累计 ${exp.total} 顿</div>
+        <div class="dog-exp-bar"><div class="dog-exp-fill" style="width:${exp.pct}%"></div></div>
+        <div class="dog-exp-text">${exp.next ? '距 Lv.'+(exp.lvl+1)+' 还差 '+(exp.next-exp.total)+' 个番茄' : '已满级 👑'}</div>
+        <div class="dog-bowl-row">
+          <span class="dog-bowl">🥣</span>
+          <div class="dog-dots">${[1,2,3,4].map(i=>`<span class="dog-dot ${i<=meals?'full':''}">${i<=meals?'🍅':''}</span>`).join('')}</div>
+          <span class="dog-bowl-label">${fed?'已喂饱 🎉':`今日 ${meals}/4 · 还差 ${4-meals} 顿`}</span>
+        </div>
+        <div class="dog-tip">${dogState==='hungry' ? `${escHtml(dogName())} 饿了，去专注一个番茄喂喂它吧~` : dogState==='ok' ? `${escHtml(dogName())} 还没吃饱，再来一个番茄！` : `🎉 ${escHtml(dogName())} 今天吃得很满足！`}</div>
+        ${fedFlash ? '<div class="dog-feed-float">🍅 +1</div>' : ''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚙️ 番茄设置</div>
+      <div class="pomo-settings">
+        <label>🍅 工作时长 <input type="number" min="1" max="120" id="setWork" value="${s.work}"> 分钟</label>
+        <label>☕ 短休息 <input type="number" min="1" max="60" id="setShort" value="${s.shortBreak}"> 分钟</label>
+        <label>🛋️ 长休息 <input type="number" min="1" max="90" id="setLong" value="${s.longBreak}"> 分钟</label>
+        <label>🔁 长休息间隔 <input type="number" min="1" max="10" id="setEvery" value="${s.longBreakEvery}"> 个番茄</label>
+      </div>
+      <div class="pomo-settings pomo-settings-2">
+        <label class="pomo-toggle"><input type="checkbox" id="setSound" ${s.sound?'checked':''} onchange="togglePomoSound()"> 🔔 播放音乐与提示音</label>
+        <label class="pomo-toggle"><input type="checkbox" id="setAuto" ${s.autoStart?'checked':''} onchange="togglePomoAuto()"> ⏭ 自动开始下一阶段</label>
+        <label class="pomo-vol">🔊 音量 <input type="range" min="0" max="1" step="0.05" id="setVol" value="${s.volume}" oninput="changePomoVolume(this.value)"></label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-primary" onclick="savePomoSettings()">💾 保存设置</button>
+        <button class="btn btn-sm btn-outline" onclick="renameDog()">✏️ 给狗狗改名</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎵 本地音乐</div>
+      <div class="music-row">
+        <span class="music-label">🍅 工作音乐</span>
+        <span class="music-name">${s.workMusic ? escHtml(s.workMusic.name) : '内置专注音效'}</span>
+        <button class="btn btn-xs btn-outline" onclick="uploadMusic('work')">${s.workMusic ? '更换' : '上传'}</button>
+        ${s.workMusic ? `<button class="btn btn-xs btn-outline" onclick="previewMusic('work')">试听</button><button class="btn btn-xs btn-outline" onclick="removeMusic('work')">恢复内置</button>` : ''}
+      </div>
+      <div class="music-row">
+        <span class="music-label">☕ 休息音乐</span>
+        <span class="music-name">${s.restMusic ? escHtml(s.restMusic.name) : '内置放松音效'}</span>
+        <button class="btn btn-xs btn-outline" onclick="uploadMusic('rest')">${s.restMusic ? '更换' : '上传'}</button>
+        ${s.restMusic ? `<button class="btn btn-xs btn-outline" onclick="previewMusic('rest')">试听</button><button class="btn btn-xs btn-outline" onclick="removeMusic('rest')">恢复内置</button>` : ''}
+      </div>
+      <div class="music-hint">💡 上传 MP3 / M4A 等音频文件，工作与休息可分别设置；播放时自动循环，文件保存在浏览器本地（IndexedDB）。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📈 近 7 天专注</div>
+      <div class="chart-wrap"><canvas id="pomoWeekChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🏅 成就系统 <span class="badge">${app.pomodoro.achievements.length}/${POMO_ACHIEVEMENTS.length}</span></div>
+      <div class="ach-grid">
+        ${POMO_ACHIEVEMENTS.map(a=>{
+          const u = app.pomodoro.achievements.includes(a.id);
+          return `<div class="ach-item ${u?'unlocked':'locked'}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  renderPomoChart();
+}
+
+function renderPomoChart() {
+  destroyChart('pomoWeek');
+  const ctx = document.getElementById('pomoWeekChart');
+  if (!ctx) return;
+  const c = getChartColors();
+  const days = getWeekDays();
+  const counts = pomoWeekCounts();
+  const labels = days.map(d=>{ const dt=new Date(d+'T00:00:00'); return ['日','一','二','三','四','五','六'][dt.getDay()]; });
+  charts.pomoWeek = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'番茄数', data:counts, backgroundColor: counts.map(n=>n>=4?c.purple:c.cyan), borderRadius:8 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, grid:{color:c.grid}, ticks:{color:c.text, stepSize:1, maxTicksLimit:6}}, x:{grid:{display:false}, ticks:{color:c.text}} } }
+  });
+}
+
+function renderDogSVG(state) {
+  const eyes = state==='happy'
+    ? `<path d="M68 84 Q76 76 84 84" stroke="#4A3728" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M116 84 Q124 76 132 84" stroke="#4A3728" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    : `<circle cx="76" cy="84" r="5" fill="#4A3728"/><circle cx="79" cy="82" r="1.6" fill="#fff"/><circle cx="124" cy="84" r="5" fill="#4A3728"/><circle cx="127" cy="82" r="1.6" fill="#fff"/>`;
+  const mouth = state==='happy'
+    ? `<path d="M84 112 Q100 128 116 112" stroke="#4A3728" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M92 118 Q100 128 108 118 Q100 134 92 118 Z" fill="#F58EA8"/>`
+    : state==='hungry'
+    ? `<path d="M84 118 Q100 106 116 118" stroke="#4A3728" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    : `<path d="M88 116 Q100 122 112 116" stroke="#4A3728" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+  const tear = state==='hungry' ? `<path d="M70 92 q3 5 0 9" stroke="#9fd0f0" stroke-width="3" fill="none" stroke-linecap="round"/>` : '';
+  return `
+    <div class="dog-stage">
+      <svg class="dog-svg ${state==='happy'?'wag':''}" viewBox="0 0 200 180">
+        <path class="dog-tail" d="M158 128 Q184 116 188 98" stroke="#D98E4A" stroke-width="11" fill="none" stroke-linecap="round"/>
+        <ellipse cx="100" cy="152" rx="52" ry="28" fill="#E8A860"/>
+        <ellipse cx="100" cy="160" rx="34" ry="14" fill="#FFF3E0"/>
+        <path d="M54 58 L46 22 Q64 18 74 42 Z" fill="#D98E4A"/>
+        <path d="M146 58 L154 22 Q136 18 126 42 Z" fill="#D98E4A"/>
+        <ellipse cx="100" cy="86" rx="56" ry="50" fill="#E8A860"/>
+        <ellipse cx="100" cy="108" rx="34" ry="26" fill="#FFF3E0"/>
+        <ellipse cx="100" cy="97" rx="9" ry="7" fill="#4A3728"/>
+        <ellipse cx="97" cy="95" rx="2.4" ry="1.8" fill="#fff" opacity=".55"/>
+        ${eyes}
+        <ellipse cx="66" cy="102" rx="8" ry="5" fill="#F5B7B1" opacity=".7"/>
+        <ellipse cx="134" cy="102" rx="8" ry="5" fill="#F5B7B1" opacity=".7"/>
+        ${mouth}
+        ${tear}
+      </svg>
+    </div>
+  `;
+}
+
+// ==================== POMODORO AUDIO (Web Audio 合成) ====================
+const PomoAudio = {
+  ctx: null, master: null, noiseSrc: null, padOscs: [], padGain: null, lfo: null, lfoGain: null,
+  restTimer: null, restStep: 0, current: null, volume: 0.7, muted: false, htmlAudio: null, audioURL: null, _blobs: {}, _preview: null,
+
+  init() {
+    this.volume = app.pomodoro.settings.volume || 0.7;
+    this.muted = !app.pomodoro.settings.sound;
+  },
+  _ensure() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = this.volume;
+      this.master.connect(this.ctx.destination);
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume().catch(()=>{});
+    return this.ctx;
+  },
+  setVolume(v) { this.volume = v; if (this.master) this.master.gain.value = v; if (this.htmlAudio) this.htmlAudio.volume = v; },
+  setMuted(m) { this.muted = m; if (m) this.stop(); },
+
+  async play(mode) {
+    if (this.muted || !app.pomodoro.settings.sound) return;
+    this.stop();
+    this.current = mode;
+    const key = mode === 'work' ? 'work' : 'rest';
+    let blob = this._blobs[key];
+    if (!blob) {
+      try { blob = await MusicDB.get(key); this._blobs[key] = blob || null; } catch(e) {}
+    }
+    if (blob) { this._playBlob(blob); return; }
+    const ctx = this._ensure();
+    if (!ctx) return;
+    if (mode === 'work') this._startWork(ctx);
+    else this._startRest(ctx);
+  },
+  async preloadMusic() {
+    for (const key of ['work', 'rest']) {
+      try { if (this._blobs[key] === undefined) this._blobs[key] = await MusicDB.get(key) || null; } catch(e) { this._blobs[key] = null; }
+    }
+  },
+  _playBlob(blob) {
+    const url = URL.createObjectURL(blob);
+    const a = new Audio();
+    a.preload = 'auto';
+    a.loop = true;
+    a.volume = this.volume;
+    a.src = url;
+    a.play().catch(err => {
+      console.warn('本地音乐播放失败:', err);
+      toast('⚠️ 音乐播放失败：文件格式可能不受支持');
+    });
+    this.htmlAudio = a;
+    this.audioURL = url;
+  },
+  async preview(mode) {
+    if (this._preview) {
+      try { this._preview.pause(); this._preview.src = ''; } catch(e) {}
+      this._preview = null;
+      toast('⏹ 已停止试听');
+      return;
+    }
+    const key = mode === 'work' ? 'work' : 'rest';
+    let blob = this._blobs[key];
+    if (!blob) { try { blob = await MusicDB.get(key); this._blobs[key] = blob || null; } catch(e) {} }
+    if (!blob) { toast('⚠️ 请先上传音乐文件'); return; }
+    const url = URL.createObjectURL(blob);
+    const a = new Audio(url);
+    a.volume = this.volume;
+    a.onended = () => { this._preview = null; };
+    a.play()
+      .then(() => toast('🔊 正在试听' + (mode === 'work' ? '工作' : '休息') + '音乐…'))
+      .catch(() => { toast('⚠️ 试听失败：文件格式可能不支持'); this._preview = null; });
+    this._preview = a;
+  },
+  _startWork(ctx) {
+    const buf = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i=0;i<data.length;i++){ const w = Math.random()*2-1; last = (last + 0.02*w)/1.02; data[i] = last*3.5; }
+    const noise = ctx.createBufferSource(); noise.buffer = buf; noise.loop = true;
+    const nFilter = ctx.createBiquadFilter(); nFilter.type = 'lowpass'; nFilter.frequency.value = 420;
+    const nGain = ctx.createGain(); nGain.gain.value = 0.14;
+    noise.connect(nFilter); nFilter.connect(nGain); nGain.connect(this.master);
+    noise.start();
+    this.noiseSrc = noise;
+
+    this.padGain = ctx.createGain();
+    this.padGain.gain.value = 0.05;
+    this.padGain.connect(this.master);
+    this.padOscs = [110, 164.81, 220].map(f => {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      o.connect(this.padGain); o.start();
+      return o;
+    });
+    this.lfo = ctx.createOscillator(); this.lfo.frequency.value = 0.08;
+    this.lfoGain = ctx.createGain(); this.lfoGain.gain.value = 0.03;
+    this.lfo.connect(this.lfoGain); this.lfoGain.connect(this.padGain.gain);
+    this.lfo.start();
+  },
+  _startRest(ctx) {
+    const scale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+    const pattern = [0,2,4,5,4,2,1,3];
+    this.restStep = 0;
+    const note = () => {
+      const f = scale[pattern[this.restStep % pattern.length]];
+      this._pluck(ctx, f);
+      this.restStep++;
+    };
+    note();
+    this.restTimer = setInterval(note, 460);
+  },
+  _pluck(ctx, freq) {
+    const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
+    const g = ctx.createGain();
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    o.connect(g); g.connect(this.master);
+    o.start(t); o.stop(t + 0.75);
+  },
+  chime(kind) {
+    if (this.muted || !app.pomodoro.settings.sound) return;
+    const ctx = this._ensure();
+    if (!ctx) return;
+    const freqs = kind === 'work' ? [880, 1108.73, 1318.51] : [659.25, 783.99, 987.77];
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ctx.createGain();
+      const t = ctx.currentTime + i*0.14;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.28, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
+      o.connect(g); g.connect(this.master);
+      o.start(t); o.stop(t + 0.8);
+    });
+  },
+  stop() {
+    if (this.noiseSrc) { try{this.noiseSrc.stop();}catch(e){} this.noiseSrc = null; }
+    (this.padOscs||[]).forEach(o=>{ try{o.stop();}catch(e){} }); this.padOscs = [];
+    if (this.lfo) { try{this.lfo.stop();}catch(e){} this.lfo = null; }
+    if (this.restTimer) { clearInterval(this.restTimer); this.restTimer = null; }
+    if (this.htmlAudio) { try { this.htmlAudio.pause(); this.htmlAudio.src = ''; } catch(e){} this.htmlAudio = null; }
+    if (this.audioURL) { try { URL.revokeObjectURL(this.audioURL); } catch(e){} this.audioURL = null; }
+    this.current = null;
+  }
+};
+
 // ==================== MODULE ROUTER ====================
 function renderModule(id) {
   switch(id) {
@@ -2934,6 +3680,7 @@ function renderModule(id) {
     case 'accounting': renderAccounting(); break;
     case 'workmemo': renderWorkMemo(); break;
     case 'photo': renderPhoto(); break;
+    case 'pomodoro': renderPomodoro(); break;
     case 'theme': renderTheme(); break;
   }
 }
@@ -2951,6 +3698,10 @@ function init() {
 
   buildSidebar();
   buildMainContent();
+  ensurePomodoroData();
+  PomoAudio.init();
+  PomoAudio.preload();
+  restorePomodoro();
   switchModule('plan');
 
   // Set active nav item
